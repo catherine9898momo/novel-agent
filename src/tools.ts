@@ -147,6 +147,10 @@ export const TOOLS_DEFINITION: Tool[] = [
                     items: { type: "string" },
                     description: "本章需要埋下的伏笔",
                   },
+                  transition_notes: {
+                    type: "string",
+                    description: "场景过渡说明：各场景之间如何自然衔接，禁止硬切",
+                  },
                 },
                 required: ["title"],
               },
@@ -311,7 +315,7 @@ export function makeToolHandlers(
     },
 
     propose_chapters: async (input) => {
-      const { chapters } = input as { chapters: (string | { title: string; target_words?: number; mood?: string; required_scenes?: string[]; plot_hooks?: string[] })[] };
+      const { chapters } = input as { chapters: (string | { title: string; target_words?: number; mood?: string; required_scenes?: string[]; plot_hooks?: string[]; transition_notes?: string })[] };
       const normalized = chapters.map((c) => typeof c === "string" ? { title: c } : c);
       const filepath = path.join(novelDir, "_chapters.json");
       await fs.writeFile(filepath, JSON.stringify(normalized, null, 2), "utf-8");

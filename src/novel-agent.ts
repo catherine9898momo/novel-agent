@@ -50,6 +50,7 @@ export interface ChapterMeta {
   mood?: string;
   required_scenes?: string[];
   plot_hooks?: string[];
+  transition_notes?: string;
 }
 
 async function loadChapters(novelDir: string): Promise<ChapterMeta[] | null> {
@@ -238,7 +239,7 @@ ${styleGuide}
 ${existingContext}${feedbackSection}
 ## 任务
 先用 read_plan 读取 outline、characters、relationships，然后调用 propose_chapters 提交章节列表。
-- 每章使用对象格式，包含：title（标题）、target_words（目标字数）、mood（情绪基调）、required_scenes（必须出现的场景）、plot_hooks（需要埋下的伏笔）
+- 每章使用对象格式，包含：title（标题）、target_words（目标字数）、mood（情绪基调）、required_scenes（必须出现的场景）、plot_hooks（需要埋下的伏笔）、transition_notes（场景过渡说明：本章各场景之间如何自然衔接，以及与上一章的衔接方式）
 - 章节数量根据故事体量自主决定（建议 5-15 章）
 - 如果已有章节文件，续写章节编号从已有章节之后开始
 完成后回复"完成"。`;
@@ -498,6 +499,135 @@ ${tasks.join("\n")}
   console.log("\n[分析] 全文分析完成，进入写作阶段");
 }
 
+// ── 章节写作计划 ──────────────────────────────────────────────
+
+async function generateChapterPlan(
+  novelTitle: string,
+  chapterTitle: string,
+  meta: ChapterMeta,
+  styleGuide: string,
+  storySoFar: string,
+  lastChapterEnding: string,
+  outline: string,
+  characters: string,
+): Promise<string> {
+  const metaLines: string[] = [];
+  if (meta.mood) metaLines.push(`情绪基调：${meta.mood}`);
+  if (meta.required_scenes?.length) metaLines.push(`必须场景：${meta.required_scenes.join("、")}`);
+  if (meta.plot_hooks?.length) metaLines.push(`需埋伏笔：${meta.plot_hooks.join("、")}`);
+  if (meta.transition_notes) metaLines.push(`场景过渡说明：${meta.transition_notes}`);
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1000,
+    messages: [{
+      role: "user",
+      content: `你是一位古言言情小说作家，即将创作《${novelTitle}》的${chapterTitle}。
+在正式写作前，请先制定本章写作计划（300字以内）。
+
+## 故事大纲
+${outline}
+
+## 人物设定
+${characters}
+
+## 故事摘要（截至上章）
+${storySoFar || "（第一章，无前情）"}
+
+## 上一章结尾
+${lastChapterEnding || "（第一章，无前情）"}
+
+## 本章要求
+${metaLines.join("\n") || "（无特殊要求）"}
+
+## 写作风格
+${styleGuide}
+
+请输出本章写作计划，包含：
+1. 开篇钩子（第一段如何入戏）
+2. 核心场景安排（2-3个关键场景，每个场景的情绪目标）
+3. 情感弧线（本章情绪如何起伏）
+4. 结尾钩子（如何让读者想看下一章）
+5. 场景过渡说明（各场景之间如何自然衔接，禁止硬切）
+
+只输出计划文本，不要写正文。`,
+    }],
+  });
+
+  return response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("");
+}
+
+// ── 章节自评 ──────────────────────────────────────────────────
+
+interface ChapterReview {
+  score: number;
+  feedback: string;
+  weak_sections: string[];
+}
+
+async function reviewChapter(
+  novelTitle: string,
+  chapterTitle: string,
+  content: string,
+  meta: ChapterMeta,
+  styleGuide: string,
+): Promise<ChapterReview> {
+  const metaLines: string[] = [];
+  if (meta.mood) metaLines.push(`情绪基调：${meta.mood}`);
+  if (meta.required_scenes?.length) metaLines.push(`必须场景：${meta.required_scenes.join("、")}`);
+  if (meta.plot_hooks?.length) metaLines.push(`需埋伏笔：${meta.plot_hooks.join("、")}`);
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 500,
+    messages: [{
+      role: "user",
+      content: `你是一位严格的古言言情小说编辑，正在评审《${novelTitle}》的${chapterTitle}。
+
+## 写作风格标准
+${styleGuide}
+
+## 本章要求
+${metaLines.join("\n") || "（无特殊要求）"}
+
+## 本章内容
+${content}
+
+## 评审任务
+请严格按以下 JSON 格式输出评审结果，不要有任何额外文字：
+{
+  "score": 评分（1-5整数，3分为及格线）,
+  "feedback": "总体评价和主要问题（100字以内）",
+  "weak_sections": ["最弱的段落或问题点1", "问题点2"]
+}
+
+评分标准：
+- 5分：语言精准有力，情感克制有张力，场景过渡自然，人物声音鲜明
+- 4分：整体良好，有1-2处可改进
+- 3分：基本达标，但有明显不足
+- 2分：语言平淡或情节生硬，需要重写部分内容
+- 1分：严重问题，需要整章重写`,
+    }],
+  });
+
+  const rawText = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("");
+
+  const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) ?? rawText.match(/(\{[\s\S]*\})/);
+  if (!jsonMatch) return { score: 3, feedback: "无法解析评审结果", weak_sections: [] };
+
+  try {
+    return JSON.parse(jsonMatch[1]) as ChapterReview;
+  } catch {
+    return { score: 3, feedback: "JSON 解析失败", weak_sections: [] };
+  }
+}
+
 // ── 主流程 ────────────────────────────────────────────────────
 
 async function main() {
@@ -665,6 +795,30 @@ async function main() {
       }
     }
 
+    // 读取规划文件（供章节计划使用）
+    const outline = await fs.readFile(path.join(novelDir, "_outline.md"), "utf-8").catch(() => "");
+    const characters = await fs.readFile(path.join(novelDir, "_characters.md"), "utf-8").catch(() => "");
+
+    // ── 改进3：写作前生成章节计划，HITL 确认 ──────────────────
+    let chapterPlan = "";
+    let planApproved = false;
+    while (!planApproved) {
+      console.log(`\n[计划] 正在生成 ${item.task} 写作计划...`);
+      chapterPlan = await generateChapterPlan(
+        novelTitle, item.task, meta, styleGuide, storySoFar, lastChapterEnding, outline, characters
+      );
+      console.log(`\n── [${item.task} 写作计划] ${"─".repeat(20)}`);
+      console.log(chapterPlan);
+      console.log("─".repeat(50));
+      const planAnswer = await askLine("确认此写作计划？(y / 输入修改意见重新生成) ");
+      if (planAnswer.toLowerCase() === "y") {
+        planApproved = true;
+      } else {
+        // 将用户反馈追加到 meta，下次生成时带入
+        meta.transition_notes = (meta.transition_notes ? meta.transition_notes + "；" : "") + planAnswer;
+      }
+    }
+
     const storySoFarSection = storySoFar
       ? `\n## 故事摘要（截至上章）\n${storySoFar}\n`
       : "";
@@ -677,35 +831,99 @@ async function main() {
     if (meta.mood) metaLines.push(`- 情绪基调：${meta.mood}`);
     if (meta.required_scenes?.length) metaLines.push(`- 必须出现的场景：${meta.required_scenes.join("、")}`);
     if (meta.plot_hooks?.length) metaLines.push(`- 需要埋下的伏笔：${meta.plot_hooks.join("、")}`);
+    // 改进4：transition_notes 注入写作要求
+    if (meta.transition_notes) metaLines.push(`- 场景过渡说明：${meta.transition_notes}（场景切换需有情绪或环境的自然过渡，禁止硬切）`);
     const metaSection = metaLines.length > 0 ? `\n## 本章写作要求\n${metaLines.join("\n")}\n` : "";
 
     const targetWords = meta.target_words ?? 1200;
 
-    const chapterSystem = `你是一位古言言情小说作家，正在创作《${novelTitle}》的${item.task}。
+    let chapterSystem = `你是一位古言言情小说作家，正在创作《${novelTitle}》的${item.task}。
 
 ## 写作风格
 ${styleGuide}
 ${storySoFarSection}${lastChapterSection}${metaSection}
+## 本章写作计划（请严格按此计划创作）
+${chapterPlan}
+
 ## 写作规则
 - 先用 read_plan 依次读取 outline、characters、relationships，理解全局设定
 - 本章不少于 ${targetWords} 字，人物言行必须符合人物设定，剧情必须与故事摘要保持连贯
+- 场景切换必须有情绪或环境的自然过渡，禁止硬切
 - 写完后调用 write_chapter 保存，chapter_number=${chapterNum}
 - 保存成功后调用 write_story_so_far，更新截至本章的故事摘要（包含本章新发生的事件）
 - 最后调用 update_todo 将任务 [${item.id}] 标记为 done
 - 完成后回复"本章完成"`;
 
-    const chapterMessages: Message[] = [
-      { role: "user", content: `请创作《${novelTitle}》${item.task}。先读规划文件，再写正文，写完保存并更新故事摘要和任务状态。` },
-    ];
+    // ── 改进2：自评重写循环（最多3次）──────────────────────────
+    const MAX_REWRITES = 3;
+    const REVIEW_THRESHOLD = 3;
+    let writeAttempt = 0;
+    let chapterAccepted = false;
 
-    const chapterCompactFn = async (): Promise<string> => {
-      const compressed = await autoCompress(client, MODEL, chapterMessages, 0);
-      return compressed ? "上下文已压缩。" : "压缩失败。";
-    };
+    while (!chapterAccepted && writeAttempt < MAX_REWRITES) {
+      writeAttempt++;
+      if (writeAttempt > 1) {
+        console.log(`\n[重写] 第 ${writeAttempt} 次尝试：${item.task}`);
+      }
 
-    const chapterHandlers = makeToolHandlers(novelTitle, todo, chapterCompactFn, todoFilepath);
+      const chapterMessages: Message[] = [
+        { role: "user", content: `请创作《${novelTitle}》${item.task}。先读规划文件，再写正文，写完保存并更新故事摘要和任务状态。` },
+      ];
 
-    await agentLoop(client, MODEL, chapterSystem, chapterMessages, TOOLS_DEFINITION, chapterHandlers, onTool, compactOptions);
+      const chapterCompactFn = async (): Promise<string> => {
+        const compressed = await autoCompress(client, MODEL, chapterMessages, 0);
+        return compressed ? "上下文已压缩。" : "压缩失败。";
+      };
+
+      // 重写时先删除已有草稿，允许重新写入
+      if (writeAttempt > 1) {
+        const prefix = String(chapterNum).padStart(3, "0");
+        const existingFiles = await fs.readdir(novelDir).catch((): string[] => []);
+        const existingChapter = existingFiles.find((f) => f.startsWith(prefix) && !f.startsWith("_"));
+        if (existingChapter) {
+          await fs.unlink(path.join(novelDir, existingChapter)).catch(() => null);
+          console.log(`[重写] 已删除旧版本：${existingChapter}`);
+        }
+      }
+
+      const chapterHandlers = makeToolHandlers(novelTitle, todo, chapterCompactFn, todoFilepath);
+      await agentLoop(client, MODEL, chapterSystem, chapterMessages, TOOLS_DEFINITION, chapterHandlers, onTool, compactOptions);
+
+      // 读取刚写好的章节内容进行自评
+      const prefix = String(chapterNum).padStart(3, "0");
+      const writtenFiles = await fs.readdir(novelDir).catch((): string[] => []);
+      const writtenFile = writtenFiles.find((f) => f.startsWith(prefix) && !f.startsWith("_"));
+
+      if (!writtenFile) {
+        console.log(`[自评] 未找到章节文件，跳过自评`);
+        chapterAccepted = true;
+        break;
+      }
+
+      const writtenContent = await fs.readFile(path.join(novelDir, writtenFile), "utf-8").catch(() => "");
+      console.log(`\n[自评] 正在评审 ${item.task}...`);
+      const review = await reviewChapter(novelTitle, item.task, writtenContent, meta, styleGuide);
+
+      console.log(`[自评] 评分：${review.score}/5 — ${review.feedback}`);
+      if (review.weak_sections.length > 0) {
+        console.log(`[自评] 薄弱点：${review.weak_sections.join("；")}`);
+      }
+
+      if (review.score >= REVIEW_THRESHOLD) {
+        chapterAccepted = true;
+        console.log(`[自评] 通过（${review.score}分），继续下一章`);
+      } else if (writeAttempt < MAX_REWRITES) {
+        console.log(`[自评] 不及格（${review.score}分），触发重写...`);
+        // 将自评反馈注入下次写作的 system prompt
+        chapterSystem = chapterSystem.replace(
+          "## 写作规则",
+          `## 上次写作问题（本次必须改进）\n${review.feedback}\n薄弱点：${review.weak_sections.join("；")}\n\n## 写作规则`
+        );
+      } else {
+        console.log(`[自评] 已达最大重写次数（${MAX_REWRITES}次），保留当前版本`);
+        chapterAccepted = true;
+      }
+    }
 
     console.log(`[写作] 完成：${item.task}`);
   }
