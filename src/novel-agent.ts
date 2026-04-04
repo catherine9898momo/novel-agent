@@ -43,7 +43,7 @@ export interface ChapterMeta {
   transition_notes?: string;
 }
 
-async function loadChapters(novelDir: string): Promise<ChapterMeta[] | null> {
+export async function loadChapters(novelDir: string): Promise<ChapterMeta[] | null> {
   const raw = await fs.readFile(path.join(novelDir, "_chapters.json"), "utf-8").catch(() => null);
   if (!raw) return null;
   const parsed = JSON.parse(raw) as (string | ChapterMeta)[];
@@ -93,7 +93,7 @@ async function selectNovel(): Promise<string> {
 
 // ── 状态检测 ──────────────────────────────────────────────────
 
-interface NovelState {
+export interface NovelState {
   hasOutline: boolean;
   hasCharacters: boolean;
   hasRelationships: boolean;
@@ -103,7 +103,7 @@ interface NovelState {
   existingChapterNums: number[];
 }
 
-async function detectState(novelDir: string): Promise<NovelState> {
+export async function detectState(novelDir: string): Promise<NovelState> {
   const files = await fs.readdir(novelDir).catch((): string[] => []);
   const existingChapterNums = files
     .filter((f) => /^\d{3}-/.test(f) && f.endsWith(".md"))
@@ -156,6 +156,7 @@ async function runPlanAgent(
   type: "outline" | "characters" | "relationships",
   existingContext: string,
   feedback?: string,
+  premise?: string,
 ): Promise<void> {
   const onTool = (toolName: string, output: string) =>
     console.log(`  [工具] ${toolName}: ${String(output).slice(0, 80)}`);
@@ -191,8 +192,13 @@ async function runPlanAgent(
   }
   const priorContext = priorSections.length > 0 ? "\n" + priorSections.join("\n\n") + "\n" : "";
 
-  const system = `你是一位资深古言言情小说策划，正在为《${novelTitle}》生成${typeLabel[type]}。
+  const premiseSection = premise ? `
+## 故事前提（用户设定，必须严格遵守）
+${premise}
+` : "";
 
+  const system = `你是一位资深古言言情小说策划，正在为《${novelTitle}》生成${typeLabel[type]}。
+${premiseSection}
 ## 写作风格参考
 ${styleGuide}
 ${existingContext}${priorContext}${feedbackSection}
@@ -213,6 +219,7 @@ async function runChapterProposalAgent(
   styleGuide: string,
   existingContext: string,
   feedback?: string,
+  premise?: string,
 ): Promise<ChapterMeta[]> {
   const onTool = (toolName: string, output: string) =>
     console.log(`  [工具] ${toolName}: ${String(output).slice(0, 80)}`);
@@ -222,8 +229,13 @@ async function runChapterProposalAgent(
 
   const feedbackSection = feedback ? `\n## 用户反馈\n${feedback}\n` : "";
 
-  const system = `你是一位资深古言言情小说策划，正在为《${novelTitle}》规划章节列表。
+  const premiseSection = premise ? `
+## 故事前提（用户设定，必须严格遵守）
+${premise}
+` : "";
 
+  const system = `你是一位资深古言言情小说策划，正在为《${novelTitle}》规划章节列表。
+${premiseSection}
 ## 写作风格参考
 ${styleGuide}
 ${existingContext}${feedbackSection}
@@ -783,6 +795,12 @@ async function main() {
     }
   }
 
+  // ── 加载故事前提 ──────────────────────────────────────────
+  const premise = await fs.readFile(path.join(novelDir, "_premise.md"), "utf-8").catch(() => "");
+  if (premise) {
+    console.log("[前提] 已加载 _premise.md");
+  }
+
   // ── 阶段一：规划 ──────────────────────────────────────────
   console.log("\n── 阶段一：规划 ──────────────────────────────────");
 
@@ -799,12 +817,12 @@ async function main() {
 
     for (const type of missingPlan) {
       console.log(`\n[规划] 生成 ${type}...`);
-      await runPlanAgent(novelTitle, novelDir, styleGuide, type, existingContext);
+      await runPlanAgent(novelTitle, novelDir, styleGuide, type, existingContext, undefined, premise || undefined);
 
       await hitlGate(
         type,
         () => fs.readFile(path.join(novelDir, `_${type}.md`), "utf-8"),
-        (feedback) => runPlanAgent(novelTitle, novelDir, styleGuide, type, existingContext, feedback),
+        (feedback) => runPlanAgent(novelTitle, novelDir, styleGuide, type, existingContext, feedback, premise || undefined),
       );
     }
   } else {
@@ -816,7 +834,7 @@ async function main() {
 
   if (!state.hasChapters) {
     console.log("\n[规划] 生成章节列表...");
-    proposedChapters = await runChapterProposalAgent(novelTitle, novelDir, styleGuide, existingContext);
+    proposedChapters = await runChapterProposalAgent(novelTitle, novelDir, styleGuide, existingContext, undefined, premise || undefined);
 
     await hitlGate(
       "章节列表",
@@ -825,7 +843,7 @@ async function main() {
         return ch ? ch.map((c, i) => `${i + 1}. ${c.title}`).join("\n") : "（未生成）";
       },
       async (feedback) => {
-        proposedChapters = await runChapterProposalAgent(novelTitle, novelDir, styleGuide, existingContext, feedback);
+        proposedChapters = await runChapterProposalAgent(novelTitle, novelDir, styleGuide, existingContext, feedback, premise || undefined);
       },
     );
   } else {
