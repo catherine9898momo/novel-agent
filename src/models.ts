@@ -22,6 +22,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import * as dotenv from "dotenv";
 dotenv.config();
 
+// ── VERIFY_MODE: Mock API 注入 ──────────────────────────
+// 验证模式下，runner.ts 在 import 本模块前将 mock factory 注册到 globalThis
+// 这样 buildEndpoint() 在模块初始化时就能读到 mock 工厂，无需 top-level await
+const _mockFactory = (globalThis as Record<string, unknown>).__VERIFY_MOCK_CLIENT_FACTORY__ as
+  ((role: string) => { messages: unknown; baseURL: string }) | undefined;
+
 // ── 默认配置（全局兜底）──────────────────────────────────
 const DEFAULT_API_KEY  = process.env.ANTHROPIC_API_KEY ?? "";
 const DEFAULT_BASE_URL = process.env.ANTHROPIC_BASE_URL;
@@ -60,6 +66,14 @@ function getOrCreateClient(apiKey: string, baseURL?: string): Anthropic {
  * 未配置的字段回退到默认值
  */
 function buildEndpoint(role: string): ModelEndpoint {
+  // VERIFY_MODE: 返回 Mock 客户端
+  if (_mockFactory) {
+    return {
+      client: _mockFactory(role.toLowerCase()) as unknown as Anthropic,
+      model: `mock-${role.toLowerCase()}`,
+    };
+  }
+
   const apiKey  = process.env[`${role}_API_KEY`]  ?? DEFAULT_API_KEY;
   const baseURL = process.env[`${role}_BASE_URL`] ?? DEFAULT_BASE_URL;
   const model   = process.env[`${role}_MODEL`]    ?? DEFAULT_MODEL;

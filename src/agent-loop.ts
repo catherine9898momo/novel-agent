@@ -36,6 +36,7 @@ export interface CompactOptions {
  * @param handlers       - 工具的实际执行逻辑，key 是工具名
  * @param onToolCall     - 可选回调，每次工具执行后触发，用来打日志或显示进度
  * @param compactOptions - 可选压缩配置，不传则不启用压缩
+ * @param onStream       - 可选流式回调，接收生成的文本片段
  */
 export async function agentLoop(
     client: Anthropic,
@@ -46,18 +47,141 @@ export async function agentLoop(
     handlers: ToolHandlers,
     onToolCall?: (name: string, output: string) => void,
     compactOptions?: CompactOptions,
+    onStream?: (chunk: string) => void,
 ): Promise<void> {
     while (true) { // 无限循环，靠内部 return 退出——因为不知道 LLM 要调用几次工具
-        const response = await client.messages.create({
+        // 记录开始时间
+        const startTime = Date.now();
+
+        // 使用流式 API，让用户看到实时生成
+        const stream = client.messages.stream({
             model,
             system,
             messages,
             tools,
-            max_tokens: 8000, // 限制单次回复长度，小说内容可能很长所以给大一点
+            max_tokens: 8000,
         });
 
+        // 收集完整响应用于后续处理
+        const contentBlocks: Anthropic.ContentBlock[] = [];
+        let currentText = "";
+        let currentToolUse: { id: string; name: string; input: string } | null = null;
+        let hasOutput = false;
+        let thinkingTimer: NodeJS.Timeout | null = null;
+
+        // 开始思考动画
+        const startThinkingAnimation = () => {
+            let dots = 0;
+            return setInterval(() => {
+                dots = (dots % 3) + 1;
+                process.stdout.write(`\r  🤔 思考中${".".repeat(dots)}   `);
+            }, 800);
+        };
+
+        // 实时输出流式内容
+        for await (const event of stream) {
+            switch (event.type) {
+                case "message_start":
+                    if (!thinkingTimer) {
+                        thinkingTimer = startThinkingAnimation();
+                    }
+                    break;
+
+                case "content_block_start":
+                    if (event.content_block.type === "tool_use") {
+                        if (thinkingTimer) {
+                            clearInterval(thinkingTimer);
+                            thinkingTimer = null;
+                            process.stdout.write("\r" + " ".repeat(20) + "\r"); // 清除思考行
+                        }
+                        currentToolUse = {
+                            id: event.content_block.id,
+                            name: event.content_block.name,
+                            input: "",
+                        };
+                        process.stdout.write(`  🛠️  准备调用: ${event.content_block.name}`);
+                        hasOutput = true;
+                    } else if (event.content_block.type === "text") {
+                        if (thinkingTimer) {
+                            clearInterval(thinkingTimer);
+                            thinkingTimer = null;
+                            process.stdout.write("\r" + " ".repeat(20) + "\r"); // 清除思考行
+                        }
+                        if (!hasOutput) process.stdout.write("  ");
+                    }
+                    break;
+
+                case "content_block_delta":
+                    if (event.delta.type === "text_delta") {
+                        const text = event.delta.text;
+                        currentText += text;
+                        // 停止思考动画（如果还在运行）
+                        if (thinkingTimer) {
+                            clearInterval(thinkingTimer);
+                            thinkingTimer = null;
+                            process.stdout.write("\r" + " ".repeat(20) + "\r"); // 清除思考行
+                        }
+                        // 打字机效果：直接输出到控制台
+                        process.stdout.write(text);
+                        onStream?.(text);
+                        hasOutput = true;
+                    } else if (event.delta.type === "input_json_delta") {
+                        if (currentToolUse) {
+                            currentToolUse.input += event.delta.partial_json;
+                        }
+                    }
+                    break;
+
+                case "content_block_stop":
+                    if (currentToolUse) {
+                        // 工具调用完成，解析参数
+                        try {
+                            const input = JSON.parse(currentToolUse.input || "{}") as Record<string, unknown>;
+                            contentBlocks.push({
+                                type: "tool_use",
+                                id: currentToolUse.id,
+                                name: currentToolUse.name,
+                                input,
+                            } as Anthropic.ContentBlock);
+                        } catch {
+                            contentBlocks.push({
+                                type: "tool_use",
+                                id: currentToolUse.id,
+                                name: currentToolUse.name,
+                                input: {},
+                            } as Anthropic.ContentBlock);
+                        }
+                        process.stdout.write(" ✓\n"); // 工具调用完成标记
+                        currentToolUse = null;
+                    } else if (currentText) {
+                        // 文本块完成
+                        contentBlocks.push({ type: "text", text: currentText } as Anthropic.ContentBlock);
+                        currentText = "";
+                    }
+                    break;
+            }
+        }
+        if (thinkingTimer) clearInterval(thinkingTimer);
+        if (hasOutput) process.stdout.write("\n"); // 换行结束输出
+
+        // 获取最终响应以检查 stop_reason
+        const response = await stream.finalMessage();
+        const typedContent = contentBlocks as Anthropic.ContentBlockParam[];
+
+        // 统计响应时间和 token 消耗
+        const elapsedMs = Date.now() - startTime;
+        const usage = response.usage;
+        const inputTokens = usage?.input_tokens ?? 0;
+        const outputTokens = usage?.output_tokens ?? 0;
+        const totalTokens = inputTokens + outputTokens;
+        const elapsedSec = (elapsedMs / 1000).toFixed(1);
+        const speed = outputTokens > 0 ? (outputTokens / (elapsedMs / 1000)).toFixed(1) : "0";
+
+        // 输出统计信息
+        console.log(`  ⏱️ ${elapsedSec}s  |  📝 ${totalTokens.toLocaleString()} tokens (${inputTokens.toLocaleString()} in / ${outputTokens.toLocaleString()} out)  |  ⚡ ${speed} t/s`);
+
         // 把 assistant 的回复追加到历史——下一轮请求需要带上，LLM 才知道自己上一步做了什么
-        messages.push({ role: "assistant", content: response.content });
+        messages.push({ role: "assistant", content: typedContent });
 
         // stop_reason 不是 "tool_use" 说明 LLM 认为任务完成了，退出循环
         if (response.stop_reason !== "tool_use") return;

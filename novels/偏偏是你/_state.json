@@ -1,0 +1,29 @@
+{
+  "novelTitle": "偏偏是你",
+  "style": "ancient-romance",
+  "currentPhase": "planning",
+  "currentChapter": null,
+  "planningComplete": {
+    "outline": false,
+    "characters": false,
+    "relationships": false,
+    "chapters": false
+  },
+  "decisions": [],
+  "openQuestions": [],
+  "sessions": [],
+  "currentSession": {
+    "startedAt": "2026-04-04T18:36:50.646Z",
+    "phase": "planning",
+    "accomplishments": [],
+    "nextSteps": []
+  },
+  "stats": {
+    "totalWords": 0,
+    "chaptersCompleted": 0,
+    "chaptersTotal": 0,
+    "averageScore": 0,
+    "totalRewrites": 0,
+    "scores": {}
+  }
+}
