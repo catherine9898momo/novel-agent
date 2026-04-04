@@ -8,33 +8,23 @@
  *   4. 写作阶段：每章独立 subagent，注入故事摘要 + 上章结尾
  */
 
-import Anthropic from "@anthropic-ai/sdk";
 import fs from "fs/promises";
 import path from "path";
 import * as readline from "readline";
-import * as dotenv from "dotenv";
 import { agentLoop, type Message, type CompactOptions } from "./agent-loop.js";
 import { TOOLS_DEFINITION, makeToolHandlers } from "./tools.js";
 import { TodoList } from "./todo.js";
 import { autoCompress } from "./context-compact.js";
+import { endpoints, printModelConfig } from "./models.js";
 
-dotenv.config();
-
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  baseURL: process.env.ANTHROPIC_BASE_URL,
-  defaultHeaders: {
-    "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
-    "Authorization": `Bearer ${process.env.ANTHROPIC_API_KEY}`,
-  },
-});
-const MODEL = process.env.MODEL_ID ?? "claude-sonnet-4-20250514";
 const NOVELS_DIR = path.resolve("novels");
 
 const compactOptions: CompactOptions = {
   enableMicro: true,
   keepLast: 3,
   threshold: 80_000,
+  compressClient: endpoints.compress.client,
+  compressModel: endpoints.compress.model,
 };
 
 // ── 工具函数 ──────────────────────────────────────────────────
@@ -214,7 +204,7 @@ ${existingContext}${priorContext}${feedbackSection}
     { role: "user", content: `请为《${novelTitle}》生成${typeLabel[type]}，完成后保存。` },
   ];
 
-  await agentLoop(client, MODEL, system, messages, TOOLS_DEFINITION, handlers, onTool, compactOptions);
+  await agentLoop(endpoints.plan.client, endpoints.plan.model, system, messages, TOOLS_DEFINITION, handlers, onTool, compactOptions);
 }
 
 async function runChapterProposalAgent(
@@ -248,7 +238,7 @@ ${existingContext}${feedbackSection}
     { role: "user", content: `请为《${novelTitle}》规划章节列表。` },
   ];
 
-  await agentLoop(client, MODEL, system, messages, TOOLS_DEFINITION, handlers, onTool, compactOptions);
+  await agentLoop(endpoints.plan.client, endpoints.plan.model, system, messages, TOOLS_DEFINITION, handlers, onTool, compactOptions);
   // 从文件读取完整元数据（proposedTitles 只有标题，完整数据在文件里）
   return (await loadChapters(novelDir)) ?? proposedTitles.map((t) => ({ title: t }));
 }
@@ -379,8 +369,8 @@ ${tasks.join("\n")}
   "breakpoint_analysis": "断点分析文本"
 }`;
 
-  const response = await client.messages.create({
-    model: MODEL,
+  const response = await endpoints.audit.client.messages.create({
+    model: endpoints.audit.model,
     max_tokens: 8192,
     messages: [{ role: "user", content: analysisPrompt }],
   });
@@ -517,8 +507,8 @@ async function generateChapterPlan(
   if (meta.plot_hooks?.length) metaLines.push(`需埋伏笔：${meta.plot_hooks.join("、")}`);
   if (meta.transition_notes) metaLines.push(`场景过渡说明：${meta.transition_notes}`);
 
-  const response = await client.messages.create({
-    model: MODEL,
+  const response = await endpoints.plan.client.messages.create({
+    model: endpoints.plan.model,
     max_tokens: 1000,
     messages: [{
       role: "user",
@@ -591,8 +581,8 @@ async function extractVoiceProfiles(
   if (dialogues.length === 0) return "";
 
   // 用 LLM 分析对话提取角色声音特征
-  const response = await client.messages.create({
-    model: MODEL,
+  const response = await endpoints.extract.client.messages.create({
+    model: endpoints.extract.model,
     max_tokens: 1500,
     messages: [{
       role: "user",
@@ -640,8 +630,8 @@ async function reviewChapter(
   if (meta.required_scenes?.length) metaLines.push(`必须场景：${meta.required_scenes.join("、")}`);
   if (meta.plot_hooks?.length) metaLines.push(`需埋伏笔：${meta.plot_hooks.join("、")}`);
 
-  const response = await client.messages.create({
-    model: MODEL,
+  const response = await endpoints.review.client.messages.create({
+    model: endpoints.review.model,
     max_tokens: 500,
     messages: [{
       role: "user",
@@ -720,8 +710,8 @@ async function runCoherenceAudit(
   // 读取伏笔追踪
   const foreshadowingRaw = await fs.readFile(path.join(novelDir, "_foreshadowing.json"), "utf-8").catch(() => "[]");
 
-  const response = await client.messages.create({
-    model: MODEL,
+  const response = await endpoints.audit.client.messages.create({
+    model: endpoints.audit.model,
     max_tokens: 2000,
     messages: [{
       role: "user",
@@ -773,6 +763,7 @@ async function main() {
   const onTool = (toolName: string, output: string) =>
     console.log(`[工具] ${toolName}: ${String(output).slice(0, 80)}`);
 
+  printModelConfig();
   console.log(`\n── 《${novelTitle}》──────────────────────────────`);
 
   const state = await detectState(novelDir);
@@ -1052,7 +1043,7 @@ ${chapterPlan}
       ];
 
       const chapterCompactFn = async (): Promise<string> => {
-        const compressed = await autoCompress(client, MODEL, chapterMessages, 0);
+        const compressed = await autoCompress(endpoints.compress.client, endpoints.compress.model, chapterMessages, 0);
         return compressed ? "上下文已压缩。" : "压缩失败。";
       };
 
@@ -1068,7 +1059,7 @@ ${chapterPlan}
       }
 
       const chapterHandlers = makeToolHandlers(novelTitle, todo, chapterCompactFn, todoFilepath);
-      await agentLoop(client, MODEL, chapterSystem, chapterMessages, TOOLS_DEFINITION, chapterHandlers, onTool, compactOptions);
+      await agentLoop(endpoints.write.client, endpoints.write.model, chapterSystem, chapterMessages, TOOLS_DEFINITION, chapterHandlers, onTool, compactOptions);
 
       // 读取刚写好的章节内容进行自评
       const prefix = String(chapterNum).padStart(3, "0");

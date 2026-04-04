@@ -1,0 +1,113 @@
+/**
+ * models.ts - 多模型路由配置（多服务商支持）
+ *
+ * 每个场景角色独立配置：模型 ID + API Key + Base URL
+ * 不同服务商（Anthropic / 智谱 / MiniMax / OpenAI）各自走各自的 API
+ *
+ * 环境变量命名规则：
+ *   {ROLE}_MODEL    — 模型 ID
+ *   {ROLE}_API_KEY  — API Key（不设则回退默认）
+ *   {ROLE}_BASE_URL — Base URL（不设则回退默认）
+ *
+ * 角色列表：
+ *   - WRITE:    正文创作    → 建议 Claude Sonnet
+ *   - PLAN:     规划策划    → 建议 GLM
+ *   - REVIEW:   审稿分析    → 建议 GLM
+ *   - COMPRESS: 上下文压缩  → 建议 MiniMax
+ *   - EXTRACT:  辅助提取    → 建议 MiniMax
+ *   - OPUS:     关键章升级  → 建议 Claude Opus
+ */
+
+import Anthropic from "@anthropic-ai/sdk";
+import * as dotenv from "dotenv";
+dotenv.config();
+
+// ── 默认配置（全局兜底）──────────────────────────────────
+const DEFAULT_API_KEY  = process.env.ANTHROPIC_API_KEY ?? "";
+const DEFAULT_BASE_URL = process.env.ANTHROPIC_BASE_URL;
+const DEFAULT_MODEL    = process.env.MODEL_ID ?? "claude-sonnet-4-20250514";
+
+/**
+ * 模型端点：一个 Anthropic client 实例 + 对应的模型 ID
+ */
+export interface ModelEndpoint {
+  client: Anthropic;
+  model: string;
+}
+
+// ── client 缓存（相同 baseURL + apiKey 复用同一个 client）──
+const clientCache = new Map<string, Anthropic>();
+
+function getOrCreateClient(apiKey: string, baseURL?: string): Anthropic {
+  const cacheKey = `${apiKey}::${baseURL ?? "default"}`;
+  let client = clientCache.get(cacheKey);
+  if (!client) {
+    client = new Anthropic({
+      apiKey,
+      baseURL,
+      defaultHeaders: {
+        "x-api-key": apiKey,
+        "Authorization": `Bearer ${apiKey}`,
+      },
+    });
+    clientCache.set(cacheKey, client);
+  }
+  return client;
+}
+
+/**
+ * 从环境变量构建一个角色的 ModelEndpoint
+ * 未配置的字段回退到默认值
+ */
+function buildEndpoint(role: string): ModelEndpoint {
+  const apiKey  = process.env[`${role}_API_KEY`]  ?? DEFAULT_API_KEY;
+  const baseURL = process.env[`${role}_BASE_URL`] ?? DEFAULT_BASE_URL;
+  const model   = process.env[`${role}_MODEL`]    ?? DEFAULT_MODEL;
+
+  return {
+    client: getOrCreateClient(apiKey, baseURL),
+    model,
+  };
+}
+
+// ── 导出各角色端点 ──────────────────────────────────────
+export const endpoints = {
+  /** 正文创作：文笔、角色对话、情感表达 */
+  write:    buildEndpoint("WRITE"),
+  /** 规划/策划：大纲、人物、关系、章节列表、单章计划 */
+  plan:     buildEndpoint("PLAN"),
+  /** 审稿/分析：自评、连贯性审计、全文分析 */
+  review:   buildEndpoint("REVIEW"),
+  /** 上下文压缩：autoCompress 历史摘要 */
+  compress: buildEndpoint("COMPRESS"),
+  /** 辅助提取：角色声音档案等 */
+  extract:  buildEndpoint("EXTRACT"),
+  /** 疑难分析：全文分析、连贯性审计、第二审稿人 */
+  audit:    buildEndpoint("AUDIT"),
+  /** 关键章节升级：首章/高潮/结尾/重写失败升级 */
+  opus:     buildEndpoint("OPUS"),
+};
+
+export type ModelRole = keyof typeof endpoints;
+
+/**
+ * 打印当前模型路由配置（启动时调用，方便确认）
+ */
+export function printModelConfig(): void {
+  console.log("\n── 模型路由配置 ──────────────────────────────");
+  const labels: Record<ModelRole, string> = {
+    write:    "正文创作",
+    plan:     "规划策划",
+    review:   "章节自评",
+    compress: "上下文压缩",
+    extract:  "辅助提取",
+    audit:    "疑难分析",
+    opus:     "关键章升级",
+  };
+  for (const [role, label] of Object.entries(labels)) {
+    const ep = endpoints[role as ModelRole];
+    const base = ep.client.baseURL || "(默认)";
+    console.log(`  ${label} (${role}):  ${ep.model}  ← ${base}`);
+  }
+  console.log("───────────────────────────────────────────────\n");
+}
