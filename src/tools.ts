@@ -135,7 +135,7 @@ export const TOOLS_DEFINITION: Tool[] = [
                 type: "object",
                 properties: {
                   title: { type: "string", description: "章节标题，例如 '第一章：入京'" },
-                  target_words: { type: "number", description: "目标字数，默认 1200" },
+                  target_words: { type: "number", description: "目标字数，默认 2000" },
                   mood: { type: "string", description: "情绪基调，例如：紧张、温情、悲伤" },
                   required_scenes: {
                     type: "array",
@@ -185,6 +185,48 @@ export const TOOLS_DEFINITION: Tool[] = [
     },
   },
   {
+    name: "write_handoff",
+    description: "每章写完后调用，记录本章交接备忘供下一章使用。内容应包含：结尾情绪状态、未完成的对话或动作、需要下一章衔接的线索。",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        chapter_number: {
+          type: "number",
+          description: "本章编号",
+        },
+        content: {
+          type: "string",
+          description: "交接备忘内容（200字以内）",
+        },
+      },
+      required: ["chapter_number", "content"],
+    },
+  },
+  {
+    name: "update_foreshadowing",
+    description: "每章写完后调用，更新伏笔追踪状态。传入本章涉及的所有伏笔变动（新埋的、推进的、已回收的）。",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        updates: {
+          type: "array",
+          description: "伏笔变动列表",
+          items: {
+            type: "object",
+            properties: {
+              desc: { type: "string", description: "伏笔描述" },
+              chapter: { type: "string", description: "涉及章节，如'第5章'" },
+              status: { type: "string", enum: ["埋下", "推进中", "已回收"], description: "伏笔当前状态" },
+              expected_resolution: { type: "string", description: "预期回收位置（新埋伏笔必填）" },
+            },
+            required: ["desc", "chapter", "status"],
+          },
+        },
+      },
+      required: ["updates"],
+    },
+  },
+  {
     // Layer 3: LLM 感觉上下文太长时主动调用，触发强制压缩
     name: "compact",
     description: "当你感觉对话历史过长、上下文即将超出限制时，主动调用此工具压缩历史。无需任何参数。",
@@ -214,11 +256,13 @@ export function makeToolHandlers(
 
   return {
     write_chapter: async (input) => {
-      const { chapter_number, title, content } = input as {
+      const { chapter_number, content } = input as {
         chapter_number: number;
         title: string;
         content: string;
       };
+      // 自动剔除标题中的"第X章"前缀，保持文件命名一致
+      const title = (input as { title: string }).title.replace(/^第\d+章\s*/, "");
 
       await fs.mkdir(novelDir, { recursive: true });
 
@@ -306,6 +350,47 @@ export function makeToolHandlers(
       const content = await fs.readFile(filepath, "utf-8").catch(() => null);
       if (!content) return "尚无故事摘要（这是第一章）";
       return content;
+    },
+
+    write_handoff: async (input) => {
+      const { chapter_number, content } = input as { chapter_number: number; content: string };
+      await fs.mkdir(novelDir, { recursive: true });
+      const prefix = String(chapter_number).padStart(3, "0");
+      const filepath = path.join(novelDir, `_handoff_${prefix}.md`);
+      await fs.writeFile(filepath, content, "utf-8");
+      return `第${chapter_number}章交接备忘已保存`;
+    },
+
+    update_foreshadowing: async (input) => {
+      const { updates } = input as {
+        updates: Array<{ desc: string; chapter: string; status: string; expected_resolution?: string }>;
+      };
+      const filepath = path.join(novelDir, "_foreshadowing.json");
+      const existing = await fs.readFile(filepath, "utf-8").catch(() => "[]");
+      const foreshadowing = JSON.parse(existing) as Array<{
+        desc: string; planted_at: string; status: string; expected_resolution: string;
+      }>;
+
+      for (const update of updates) {
+        const existing_item = foreshadowing.find((f) => f.desc === update.desc);
+        if (existing_item) {
+          existing_item.status = update.status;
+          if (update.status === "已回收") {
+            existing_item.expected_resolution = update.chapter;
+          }
+        } else {
+          foreshadowing.push({
+            desc: update.desc,
+            planted_at: update.chapter,
+            status: update.status,
+            expected_resolution: update.expected_resolution ?? "",
+          });
+        }
+      }
+
+      await fs.writeFile(filepath, JSON.stringify(foreshadowing, null, 2), "utf-8");
+      const active = foreshadowing.filter((f) => f.status !== "已回收");
+      return `伏笔状态已更新（共 ${foreshadowing.length} 条，${active.length} 条未回收）`;
     },
 
     // Layer 3: 主动压缩工具

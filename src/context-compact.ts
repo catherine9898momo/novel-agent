@@ -12,24 +12,38 @@ import type { Message } from "./agent-loop.js";
 
 /**
  * 估算 messages 的 token 数量
- * 粗略算法：总字符数 / 4（1 token ≈ 4 chars）
+ * 中文字符：1 字 ≈ 1.5 tokens；其余字符：4 chars ≈ 1 token
  */
 export function estimateTokens(messages: Message[]): number {
   let total = 0;
   for (const msg of messages) {
     if (typeof msg.content === "string") {
-      total += msg.content.length;
+      total += estimateStringTokens(msg.content);
     } else if (Array.isArray(msg.content)) {
       for (const block of msg.content) {
         if ("text" in block && typeof block.text === "string") {
-          total += block.text.length;
+          total += estimateStringTokens(block.text);
         } else if ("content" in block && typeof block.content === "string") {
-          total += block.content.length;
+          total += estimateStringTokens(block.content);
         }
       }
     }
   }
-  return Math.ceil(total / 4);
+  return Math.ceil(total);
+}
+
+function estimateStringTokens(text: string): number {
+  let cjk = 0;
+  let other = 0;
+  for (const ch of text) {
+    // CJK Unified Ideographs + common CJK punctuation ranges
+    if (ch.charCodeAt(0) >= 0x4e00 && ch.charCodeAt(0) <= 0x9fff) {
+      cjk++;
+    } else {
+      other++;
+    }
+  }
+  return cjk * 1.5 + other / 4;
 }
 
 /**
@@ -75,8 +89,15 @@ export async function autoCompress(
 ): Promise<boolean> {
   if (estimateTokens(messages) < threshold) return false;
 
-  // 序列化 messages 为可读文本
-  const serialized = messages
+  // 保留最近 4 条消息（2 轮对话），只压缩更早的历史
+  const keepRecent = 4;
+  const toCompress = messages.slice(0, Math.max(0, messages.length - keepRecent));
+  const recentMessages = messages.slice(Math.max(0, messages.length - keepRecent));
+
+  if (toCompress.length === 0) return false; // 没有可压缩的内容
+
+  // 序列化需要压缩的部分为可读文本
+  const serialized = toCompress
     .map((m) => {
       const role = m.role.toUpperCase();
       if (typeof m.content === "string") return `[${role}]: ${m.content}`;
@@ -94,7 +115,7 @@ export async function autoCompress(
 
   const summaryResponse = await client.messages.create({
     model,
-    system: "你是一个对话历史摘要助手。请将以下对话历史压缩为简洁的摘要，保留关键信息：已完成的任务、写好的章节内容要点、重要决策。摘要用中文，结构清晰。",
+    system: "你是一个对话历史摘要助手。请将以下对话历史压缩为简洁的摘要，保留关键信息：已完成的任务、写好的章节内容要点、重要决策、尚未解决的伏笔。摘要用中文，结构清晰。",
     messages: [{ role: "user", content: `请总结以下对话历史：\n\n${serialized}` }],
     max_tokens: 2000,
   });
@@ -102,11 +123,12 @@ export async function autoCompress(
   const summary =
     summaryResponse.content[0].type === "text" ? summaryResponse.content[0].text : "（摘要生成失败）";
 
-  // 原地替换 messages
+  // 原地替换 messages：摘要 + 保留的最近消息
   messages.length = 0;
   messages.push(
     { role: "user", content: `[对话历史摘要]\n${summary}` },
     { role: "assistant", content: "已了解之前的进度，继续完成剩余任务。" },
+    ...recentMessages,
   );
 
   return true;

@@ -560,6 +560,66 @@ ${styleGuide}
     .join("");
 }
 
+// ── 角色声音档案提取 ──────────────────────────────────────────
+
+async function extractVoiceProfiles(
+  novelDir: string,
+  existingChapterNums: number[],
+): Promise<string> {
+  // 读取已有声音档案（缓存）
+  const profilePath = path.join(novelDir, "_voice_profiles.md");
+  const cached = await fs.readFile(profilePath, "utf-8").catch(() => null);
+  if (cached) return cached;
+
+  // 无已有章节则无法提取
+  if (existingChapterNums.length === 0) return "";
+
+  // 从已写章节中提取对话片段（最多读前 5 章）
+  const files = await fs.readdir(novelDir).catch((): string[] => []);
+  const dialogues: string[] = [];
+  for (const num of existingChapterNums.slice(0, 5)) {
+    const prefix = String(num).padStart(3, "0");
+    const file = files.find((f) => f.startsWith(prefix) && f.endsWith(".md"));
+    if (file) {
+      const content = await fs.readFile(path.join(novelDir, file), "utf-8").catch(() => "");
+      // 提取对话行（包含中文引号的行）
+      const lines = content.split("\n").filter((l) => l.includes("\u201c") || l.includes("\u201d"));
+      dialogues.push(...lines.slice(0, 10)); // 每章最多取 10 句
+    }
+  }
+
+  if (dialogues.length === 0) return "";
+
+  // 用 LLM 分析对话提取角色声音特征
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1500,
+    messages: [{
+      role: "user",
+      content: `分析以下古言小说对话片段，提取每个角色的语言特征。
+
+${dialogues.join("\n")}
+
+对每个出现的角色，输出：
+- 角色名
+- 语言风格（简洁/细腻/犀利/温和等）
+- 口头习惯（常用句式、比喻习惯）
+- 代表性台词（直接引用 1-2 句最能体现其声音的对话）
+
+格式简洁，每个角色 3-4 行即可。`,
+    }],
+  });
+
+  const profiles = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("");
+
+  // 缓存到文件，后续章节直接读取
+  await fs.writeFile(profilePath, profiles, "utf-8");
+  return profiles;
+}
+
 // ── 章节自评 ──────────────────────────────────────────────────
 
 interface ChapterReview {
@@ -585,7 +645,7 @@ async function reviewChapter(
     max_tokens: 500,
     messages: [{
       role: "user",
-      content: `你是一位严格的古言言情小说编辑，正在评审《${novelTitle}》的${chapterTitle}。
+      content: `你是一位以严苛著称的古言言情小说主编，评审作品时宁可打低分也绝不放水。你的标准是出版级别的。
 
 ## 写作风格标准
 ${styleGuide}
@@ -599,17 +659,24 @@ ${content}
 ## 评审任务
 请严格按以下 JSON 格式输出评审结果，不要有任何额外文字：
 {
-  "score": 评分（1-5整数，3分为及格线）,
+  "score": 评分（1-5整数，4分为及格线）,
   "feedback": "总体评价和主要问题（100字以内）",
   "weak_sections": ["最弱的段落或问题点1", "问题点2"]
 }
 
-评分标准：
-- 5分：语言精准有力，情感克制有张力，场景过渡自然，人物声音鲜明
-- 4分：整体良好，有1-2处可改进
-- 3分：基本达标，但有明显不足
-- 2分：语言平淡或情节生硬，需要重写部分内容
-- 1分：严重问题，需要整章重写`,
+评分标准（对照风格指南中的范文水准）：
+- 5分：达到范文水准——语言如刀，情感克制但读者会疼，每句对话都在做事，场景过渡浑然天成
+- 4分：整体良好，语言有质感，有1-2处可打磨但不影响阅读体验
+- 3分：能读，但有明显不足：语言偶有套路感、情绪外露、过渡生硬、人物声音模糊
+- 2分：语言平淡或情节生硬，有"她心想""美若天仙"等风格指南明确禁止的写法
+- 1分：严重问题，需要整章重写
+
+评审重点（逐项检查）：
+1. 是否有风格指南"禁忌"部分列出的问题？
+2. 对话是否在"做事"（推进关系/暴露性格），还是在说废话？
+3. 情感表达是通过细节和行为，还是直接宣泄？
+4. 场景过渡是否自然，有无硬切？
+5. 字数是否达标？`,
     }],
   });
 
@@ -626,6 +693,70 @@ ${content}
   } catch {
     return { score: 3, feedback: "JSON 解析失败", weak_sections: [] };
   }
+}
+
+// ── 连贯性审计 ──────────────────────────────────────────────────
+
+async function runCoherenceAudit(
+  novelTitle: string,
+  novelDir: string,
+  styleGuide: string,
+  chapterCount: number,
+): Promise<void> {
+  console.log(`\n── 连贯性审计（前 ${chapterCount} 章）──────────────────────`);
+
+  // 读取所有已写章节
+  const files = await fs.readdir(novelDir).catch((): string[] => []);
+  const chapterFiles = files
+    .filter((f) => /^\d{3}-/.test(f) && f.endsWith(".md"))
+    .sort();
+
+  const chapterTexts: string[] = [];
+  for (const file of chapterFiles) {
+    const content = await fs.readFile(path.join(novelDir, file), "utf-8").catch(() => "");
+    chapterTexts.push(`### ${file}\n${content}`);
+  }
+
+  // 读取伏笔追踪
+  const foreshadowingRaw = await fs.readFile(path.join(novelDir, "_foreshadowing.json"), "utf-8").catch(() => "[]");
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 2000,
+    messages: [{
+      role: "user",
+      content: `你是一位资深小说编辑，正在审查《${novelTitle}》前 ${chapterCount} 章的连贯性。
+
+## 全部章节内容
+${chapterTexts.join("\n\n---\n\n")}
+
+## 伏笔追踪记录
+${foreshadowingRaw}
+
+## 审查任务
+请逐项检查以下问题，发现问题才列出，没有问题的类别不用写：
+
+1. **时间线矛盾**：事件发生顺序是否有冲突？（如：角色在第3章说"三天前"的事件，但第1章写的是"昨天"）
+2. **人物行为不一致**：角色言行是否与其设定和前文表现矛盾？
+3. **遗忘的伏笔**：有没有埋下但后续完全没有推进的伏笔？
+4. **场景逻辑漏洞**：有没有空间或物理上不合理的描写？
+5. **语气/称呼变化**：同一角色对同一人的称呼是否在不同章节中不一致？
+
+输出格式：
+- 每个问题一行，标明章节位置和具体问题
+- 如果没有发现问题，输出"审查通过，暂未发现连贯性问题"`,
+    }],
+  });
+
+  const auditResult = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("");
+
+  console.log("\n【连贯性审计结果】");
+  console.log(auditResult);
+  console.log("─".repeat(50));
+  await askLine("按 Enter 继续写作...");
 }
 
 // ── 主流程 ────────────────────────────────────────────────────
@@ -770,6 +901,9 @@ async function main() {
     return;
   }
 
+  // ── 提取角色声音档案（首次提取后缓存）──
+  const voiceProfiles = await extractVoiceProfiles(novelDir, stateAfterPlan.existingChapterNums);
+
   // ── 阶段二：每章独立 subagent ─────────────────────────────
   for (const item of pending) {
     const match = item.task.match(/第(\d+)章/);
@@ -777,27 +911,43 @@ async function main() {
     const meta = finalChapters.find((c) => c.title === item.task) ?? { title: item.task };
 
     console.log(`\n[写作] 开始：${item.task}`);
+
+    // 打印情绪曲线，帮助理解当前章节在全书中的位置
+    const moodCurve = finalChapters.map((c, i) => {
+      const num = i + 1;
+      const isDone = stateAfterPlan.existingChapterNums.includes(num);
+      const isCurrent = num === chapterNum;
+      const marker = isCurrent ? ">>>" : isDone ? " * " : "   ";
+      return `${marker} 第${num}章 ${c.mood || "未定"}`;
+    }).join("\n");
+    console.log(`\n── 情绪曲线 ──\n${moodCurve}\n──────────────`);
+
     todo.update(item.id, "in_progress");
     await todo.save(todoFilepath);
 
     // 故事记忆：_story_so_far.md
     const storySoFar = await fs.readFile(path.join(novelDir, "_story_so_far.md"), "utf-8").catch(() => "");
 
-    // 上一章结尾 600 字
+    // 上一章结尾 2000 字（600 字太短，无法捕捉完整的情绪弧线和伏笔铺设）
     const prevNum = chapterNum - 1;
     let lastChapterEnding = "";
+    let lastHandoff = "";
     if (prevNum >= 1) {
       const prevFiles = await fs.readdir(novelDir).catch((): string[] => []);
       const prevFile = prevFiles.find((f) => f.startsWith(String(prevNum).padStart(3, "0")));
       if (prevFile) {
         const raw = await fs.readFile(path.join(novelDir, prevFile), "utf-8").catch(() => "");
-        lastChapterEnding = raw.slice(-600);
+        lastChapterEnding = raw.slice(-2000);
       }
+      // 读取上一章的交接备忘
+      const handoffFile = path.join(novelDir, `_handoff_${String(prevNum).padStart(3, "0")}.md`);
+      lastHandoff = await fs.readFile(handoffFile, "utf-8").catch(() => "");
     }
 
-    // 读取规划文件（供章节计划使用）
+    // 读取规划文件（供章节计划和写作使用，直接注入 prompt 省去 3 次 read_plan 调用）
     const outline = await fs.readFile(path.join(novelDir, "_outline.md"), "utf-8").catch(() => "");
     const characters = await fs.readFile(path.join(novelDir, "_characters.md"), "utf-8").catch(() => "");
+    const relationships = await fs.readFile(path.join(novelDir, "_relationships.md"), "utf-8").catch(() => "");
 
     // ── 改进3：写作前生成章节计划，HITL 确认 ──────────────────
     let chapterPlan = "";
@@ -825,6 +975,9 @@ async function main() {
     const lastChapterSection = lastChapterEnding
       ? `\n## 上一章结尾（保持衔接）\n${lastChapterEnding}\n`
       : "";
+    const handoffSection = lastHandoff
+      ? `\n## 上一���交接备忘（衔接重点）\n${lastHandoff}\n`
+      : "";
 
     const metaLines: string[] = [];
     if (meta.target_words) metaLines.push(`- 目标字数：${meta.target_words} 字`);
@@ -835,28 +988,56 @@ async function main() {
     if (meta.transition_notes) metaLines.push(`- 场景过渡说明：${meta.transition_notes}（场景切换需有情绪或环境的自然过渡，禁止硬切）`);
     const metaSection = metaLines.length > 0 ? `\n## 本章写作要求\n${metaLines.join("\n")}\n` : "";
 
-    const targetWords = meta.target_words ?? 1200;
+    const targetWords = meta.target_words ?? 2000;
+
+    // 情绪曲线位置（让 LLM 知道当前章节在全书情绪弧线中的位置）
+    const moodEntries = finalChapters.map((c, i) => {
+      const num = i + 1;
+      const isDone = stateAfterPlan.existingChapterNums.includes(num);
+      const isCurrent = num === chapterNum;
+      const marker = isCurrent ? ">>> " : isDone ? "  * " : "    ";
+      return `${marker}第${num}章 [${c.mood || "未定"}] ${c.title}`;
+    });
+    const moodPositionSection = `\n## 情绪曲线（>>>标记当前章节位置，*标记已完成章节）\n${moodEntries.join("\n")}\n`;
+
+    // 读取伏笔状态（写作时需要知道哪些伏笔待推进/待回收）
+    const foreshadowingRaw = await fs.readFile(path.join(novelDir, "_foreshadowing.json"), "utf-8").catch(() => "[]");
+    const foreshadowing = JSON.parse(foreshadowingRaw) as Array<{ desc: string; planted_at: string; status: string; expected_resolution: string }>;
+    const activeForeshadowing = foreshadowing.filter(f => f.status !== "已回收");
+    const foreshadowingSection = activeForeshadowing.length > 0
+      ? `\n## 当前未回收伏笔\n${activeForeshadowing.map(f => `- [${f.status}] ${f.desc}（埋于${f.planted_at}，预期回收：${f.expected_resolution}）`).join("\n")}\n`
+      : "";
 
     let chapterSystem = `你是一位古言言情小说作家，正在创作《${novelTitle}》的${item.task}。
 
 ## 写作风格
 ${styleGuide}
-${storySoFarSection}${lastChapterSection}${metaSection}
+
+## 故事大纲
+${outline}
+
+## 人物设定
+${characters}
+
+## 人物关系
+${relationships}
+${voiceProfiles ? `\n## 角色声音档案（对话时严格保持各角色的语言风格一致性）\n${voiceProfiles}\n` : ""}${moodPositionSection}${storySoFarSection}${lastChapterSection}${handoffSection}${foreshadowingSection}${metaSection}
 ## 本章写作计划（请严格按此计划创作）
 ${chapterPlan}
 
 ## 写作规则
-- 先用 read_plan 依次读取 outline、characters、relationships，理解全局设定
 - 本章不少于 ${targetWords} 字，人物言行必须符合人物设定，剧情必须与故事摘要保持连贯
 - 场景切换必须有情绪或环境的自然过渡，禁止硬切
 - 写完后调用 write_chapter 保存，chapter_number=${chapterNum}
 - 保存成功后调用 write_story_so_far，更新截至本章的故事摘要（包含本章新发生的事件）
+- 然后调用 write_handoff，写本章交接备忘（结尾情绪状态、未完成的对话或动作、需要下一章衔接的线索，200字以内）
+- 然后调用 update_foreshadowing，更新本章涉及的伏笔状态（新埋的、推进的、已回收的）
 - 最后调用 update_todo 将任务 [${item.id}] 标记为 done
 - 完成后回复"本章完成"`;
 
     // ── 改进2：自评重写循环（最多3次）──────────────────────────
     const MAX_REWRITES = 3;
-    const REVIEW_THRESHOLD = 3;
+    const REVIEW_THRESHOLD = 4; // 提高及格线：4 分 = "整体良好"，3 分有明显不足不应放行
     let writeAttempt = 0;
     let chapterAccepted = false;
 
@@ -867,7 +1048,7 @@ ${chapterPlan}
       }
 
       const chapterMessages: Message[] = [
-        { role: "user", content: `请创作《${novelTitle}》${item.task}。先读规划文件，再写正文，写完保存并更新故事摘要和任务状态。` },
+        { role: "user", content: `请创作《${novelTitle}》${item.task}。直接写正文，写完保存并更新故事摘要和任务状态。` },
       ];
 
       const chapterCompactFn = async (): Promise<string> => {
@@ -901,6 +1082,26 @@ ${chapterPlan}
       }
 
       const writtenContent = await fs.readFile(path.join(novelDir, writtenFile), "utf-8").catch(() => "");
+
+      // ── HITL：用户审阅章节正文 ──
+      console.log(`\n── [${item.task} 正文] ${"─".repeat(20)}`);
+      console.log(writtenContent);
+      console.log("���".repeat(50));
+      const userReview = await askLine("审阅章节：(y=通过并自评 / s=直接通过跳过自评 / 输入修改意见重写) ");
+      if (userReview.toLowerCase() === "s") {
+        chapterAccepted = true;
+        console.log(`[审阅] 用户直接通过，跳过自评`);
+        break;
+      } else if (userReview.toLowerCase() !== "y") {
+        // 用户给了修改意见，注入反馈并重写
+        console.log(`[审阅] 根据用户反馈重写...`);
+        chapterSystem = chapterSystem.replace(
+          "## 写作规则",
+          `## 用户修改意见（本次必须按此修改）\n${userReview}\n\n## 写作规则`
+        );
+        continue; // 跳过自评，直接进入下一次写作循环
+      }
+
       console.log(`\n[自评] 正在评审 ${item.task}...`);
       const review = await reviewChapter(novelTitle, item.task, writtenContent, meta, styleGuide);
 
@@ -926,6 +1127,14 @@ ${chapterPlan}
     }
 
     console.log(`[写作] 完成：${item.task}`);
+
+    // ── 每 5 章触发连贯性审计 ──
+    const doneCount = todo.pending().length === 0
+      ? finalChapters.length
+      : finalChapters.length - todo.pending().length;
+    if (doneCount > 0 && doneCount % 5 === 0) {
+      await runCoherenceAudit(novelTitle, novelDir, styleGuide, doneCount);
+    }
   }
 
   console.log("\n创作完成！");
