@@ -9,11 +9,19 @@
     "relationships": false,
     "chapters": false
   },
-  "decisions": [],
+  "decisions": [
+    {
+      "timestamp": "2026-04-04T18:59:33.310Z",
+      "phase": "planning",
+      "topic": "outline",
+      "choice": "女主可以会武功，武功水平算还可以，但是没有很厉害，日常能自保但是遇到当世高手还是无法对抗；男主的设定可以再像杨过一点，女主的性格也可以更像郭芙一点（像玫瑰一样热烈、娇蛮的可爱女子）",
+      "context": "HITL 反馈重新生成"
+    }
+  ],
   "openQuestions": [],
   "sessions": [],
   "currentSession": {
-    "startedAt": "2026-04-04T18:36:50.646Z",
+    "startedAt": "2026-04-04T18:47:22.873Z",
     "phase": "planning",
     "accomplishments": [],
     "nextSteps": []
