@@ -4,12 +4,13 @@ import path from "path";
 import os from "os";
 
 // 动态导入以避免 models.ts 中的 dotenv 副作用
-let detectState: typeof import("../src/novel-agent.js").detectState;
+let detectFiles: typeof import("../src/orchestrator.js").detectFiles;
 let loadChapters: typeof import("../src/novel-agent.js").loadChapters;
 
 beforeEach(async () => {
+  const orchestrator = await import("../src/orchestrator.js");
   const mod = await import("../src/novel-agent.js");
-  detectState = mod.detectState;
+  detectFiles = orchestrator.detectFiles;
   loadChapters = mod.loadChapters;
 });
 
@@ -23,11 +24,11 @@ afterEach(async () => {
   await fs.rm(tmpDir, { recursive: true, force: true });
 });
 
-// ── detectState ─────────────────────────────────────────────
+// ── detectFiles ─────────────────────────────────────────────
 
-describe("detectState", () => {
+describe("detectFiles", () => {
   it("空目录：所有状态为 false", async () => {
-    const state = await detectState(tmpDir);
+    const state = await detectFiles(tmpDir);
     expect(state.hasOutline).toBe(false);
     expect(state.hasCharacters).toBe(false);
     expect(state.hasRelationships).toBe(false);
@@ -41,7 +42,7 @@ describe("detectState", () => {
     await fs.writeFile(path.join(tmpDir, "_outline.md"), "大纲内容");
     await fs.writeFile(path.join(tmpDir, "_characters.md"), "人物设定");
 
-    const state = await detectState(tmpDir);
+    const state = await detectFiles(tmpDir);
     expect(state.hasOutline).toBe(true);
     expect(state.hasCharacters).toBe(true);
     expect(state.hasRelationships).toBe(false);
@@ -52,7 +53,7 @@ describe("detectState", () => {
     await fs.writeFile(path.join(tmpDir, "003-第三章.md"), "内容");
     await fs.writeFile(path.join(tmpDir, "_outline.md"), "非章节文件");
 
-    const state = await detectState(tmpDir);
+    const state = await detectFiles(tmpDir);
     expect(state.existingChapterNums).toEqual([1, 3]);
   });
 
@@ -62,7 +63,7 @@ describe("detectState", () => {
       path.join(tmpDir, "_chapters.json"),
       JSON.stringify(["第一章", "第二章"]),
     );
-    let state = await detectState(tmpDir);
+    let state = await detectFiles(tmpDir);
     expect(state.hasChapters).toBe(true);
     expect(state.chaptersHaveMetadata).toBe(false);
 
@@ -71,12 +72,12 @@ describe("detectState", () => {
       path.join(tmpDir, "_chapters.json"),
       JSON.stringify([{ title: "第一章", mood: "紧张" }]),
     );
-    state = await detectState(tmpDir);
+    state = await detectFiles(tmpDir);
     expect(state.chaptersHaveMetadata).toBe(true);
   });
 
   it("不存在的目录不报错，返回空状态", async () => {
-    const state = await detectState("/tmp/nonexistent-novel-dir-" + Date.now());
+    const state = await detectFiles("/tmp/nonexistent-novel-dir-" + Date.now());
     expect(state.hasOutline).toBe(false);
     expect(state.existingChapterNums).toEqual([]);
   });

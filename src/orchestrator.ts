@@ -28,7 +28,7 @@ import { printKnowledgeStats, appendPreference, addEntry } from "./knowledge-bas
 
 // Specialized Agents
 import { runPlanAgent, runChapterProposalAgent, type PlanType } from "./agents/planner.js";
-import { runWriterAgent, cleanupForRewrite, type WriteContext } from "./agents/writer.js";
+import { runWriterAgent, cleanupForRewrite, generateOpeningVariants, polishChapter, type WriteContext } from "./agents/writer.js";
 import { reviewChapter, verifyAgainstPlan, runCoherenceAudit } from "./agents/reviewer.js";
 import { runAnalysisAgent, extractVoiceProfiles, loadExistingChaptersText, type AnalysisResult } from "./agents/researcher.js";
 import { generateXmlChapterPlan, planToXml, type ChapterPlan } from "./xml-plan.js";
@@ -62,7 +62,7 @@ async function hitlGate(
 
 // ── 状态检测 ──────────────────────────────────────────────
 
-interface DetectedFiles {
+export interface DetectedFiles {
   hasOutline: boolean;
   hasCharacters: boolean;
   hasRelationships: boolean;
@@ -72,7 +72,7 @@ interface DetectedFiles {
   existingChapterNums: number[];
 }
 
-async function detectFiles(novelDir: string): Promise<DetectedFiles> {
+export async function detectFiles(novelDir: string): Promise<DetectedFiles> {
   const files = await fs.readdir(novelDir).catch((): string[] => []);
   const existingChapterNums = files
     .filter((f) => /^\d{3}-/.test(f) && f.endsWith(".md"))
@@ -105,16 +105,24 @@ async function loadChapters(novelDir: string): Promise<ChapterMeta[] | null> {
 
 // ── 编排器主类 ──────────────────────────────────────────────
 
+export type GenerationMode =
+  | "skeleton"  // 只生成框架
+  | "chapter"   // 生成单章
+  | "batch"     // 批量生成多章
+  | "full";     // 一次性生成全部（当前默认）
+
 export class Orchestrator {
   private novelTitle: string;
   private novelDir: string;
   private styleGuide: string = "";
   private state!: NovelState;
   private compactOptions: CompactOptions;
+  private mode: GenerationMode;
 
-  constructor(novelTitle: string, novelDir: string) {
+  constructor(novelTitle: string, novelDir: string, mode: GenerationMode = "full") {
     this.novelTitle = novelTitle;
     this.novelDir = novelDir;
+    this.mode = mode;
     this.compactOptions = {
       enableMicro: true,
       keepLast: 3,
@@ -143,13 +151,32 @@ export class Orchestrator {
 
     printModelConfig();
     await printKnowledgeStats();
-    console.log(`\n── 《${this.novelTitle}》──────────────────────────────`);
+    console.log(`\n── 《${this.novelTitle}》[模式: ${this.mode}] ──────────────────────────────`);
 
     // 开始新会话
     await this.state.startSession();
 
     // 清理孤立草稿
     await this.cleanupDrafts();
+
+    // 根据模式选择流程
+    if (this.mode === "skeleton") {
+      await this.runSkeletonMode();
+      return;
+    }
+
+    // 检测是否有未完成的章节（断点续传）
+    const unfinished = this.state.getUnfinishedChapters();
+    if (unfinished.length > 0) {
+      const first = unfinished[0];
+      console.log(`\n检测到未完成章节：第 ${first.chapterNum} 章 (${first.status})`);
+      const answer = await askLine("是否从断点继续？(y/n) ");
+
+      if (answer === "y") {
+        await this.resumeFromCheckpoint(first);
+        return;
+      }
+    }
 
     // 按阶段调度（GSD phase routing）
     await this.phasePlanning();
@@ -196,6 +223,7 @@ export class Orchestrator {
           premise: premise || undefined,
           compactOptions: this.compactOptions,
           onTool: this.onTool,
+          checkpointFile: path.join(this.novelDir, "_checkpoint.json"),
         };
 
         await runPlanAgent(type, planConfig);
@@ -228,6 +256,7 @@ export class Orchestrator {
         premise: premise || undefined,
         compactOptions: this.compactOptions,
         onTool: this.onTool,
+        checkpointFile: path.join(this.novelDir, "_checkpoint.json"),
       };
 
       await runChapterProposalAgent(planConfig);
@@ -352,7 +381,7 @@ export class Orchestrator {
       writeCtx.chapterPlan = chapterPlan;
 
       // ── 写作 + 自评重写循环（GSD Execute + Verify）──
-      await this.writeAndVerifyChapter(
+      await this.writeAndVerifyChapterLegacy(
         item, chapterNum, meta, chapterPlan, writeCtx, todo, todoFilepath,
       );
 
@@ -413,9 +442,9 @@ export class Orchestrator {
     return plan!;
   }
 
-  // ── 写作 + 自评重写循环 ────────────────────────────────
+  // ── 写作 + 自评重写循环（旧版本，用于 phaseWriting）────────────────────────────────
 
-  private async writeAndVerifyChapter(
+  private async writeAndVerifyChapterLegacy(
     item: { id: number; task: string },
     chapterNum: number,
     meta: ChapterMeta,
@@ -434,6 +463,24 @@ export class Orchestrator {
       if (writeAttempt > 1) {
         console.log(`\n[重写] 第 ${writeAttempt} 次尝试：${item.task}`);
         await cleanupForRewrite(this.novelDir, chapterNum);
+      }
+
+      // 多版本开头选择（仅首次写作时触发）
+      if (writeAttempt === 1) {
+        try {
+          console.log(`\n[多版本] 生成开头备选...`);
+          const chosenOpening = await generateOpeningVariants(writeCtx);
+          if (chosenOpening) {
+            // 将选中的开头注入写作上下文的 meta
+            writeCtx.meta = {
+              ...writeCtx.meta,
+              transition_notes: (writeCtx.meta.transition_notes ?? "") +
+                `\n\n## 用户选定的开头（必须以此为第一段，在此基础上续写）\n${chosenOpening}`,
+            };
+          }
+        } catch (err) {
+          console.log(`[多版本] 生成失败，跳过：${(err as Error).message}`);
+        }
       }
 
       // 执行写作 Agent（全新上下文）
@@ -481,25 +528,59 @@ export class Orchestrator {
       if (review.weak_sections.length > 0) {
         console.log(`[自评] 薄弱点：${review.weak_sections.join("；")}`);
       }
+      if (review.weak_spots && review.weak_spots.length > 0) {
+        console.log(`\n── [需要人工打磨的段落] ${"─".repeat(20)}`);
+        for (const spot of review.weak_spots) {
+          console.log(`  📍 "${spot.excerpt}"`);
+          console.log(`     问题：${spot.issue}`);
+          console.log(`     建议：${spot.suggestion}\n`);
+        }
+        console.log("─".repeat(50));
+      }
 
       // 记录评分
       await this.state.recordChapterScore(chapterNum, review.score);
 
       if (review.score >= REVIEW_THRESHOLD) {
+        console.log(`[自评] 通过（${review.score}分）`);
+
+        // HITL：润色入口 — 用户可指定风格目标让 AI 定向打磨
+        let finalContent = result.content;
+        const polishAnswer = await askLine('润色？(直接回车跳过 / 输入润色指令，如「对话更克制」「加强环境描写」) ');
+        if (polishAnswer && polishAnswer.trim() !== "") {
+          console.log(`[润色] 按指令打磨中...`);
+          const polishResult = await polishChapter(
+            finalContent, polishAnswer.trim(), this.styleGuide, review.weak_spots,
+          );
+          console.log(`\n── [润色结果] ${"─".repeat(20)}`);
+          console.log(polishResult.polished.slice(0, 500) + (polishResult.polished.length > 500 ? "\n...（已截断预览）" : ""));
+          console.log(`\n[修改说明] ${polishResult.changes}`);
+          console.log("─".repeat(50));
+
+          const acceptPolish = await askLine("接受润色结果？(y=接受并覆盖 / n=保留原文) ");
+          if (acceptPolish.toLowerCase() === "y" && result.filePath) {
+            await fs.writeFile(result.filePath, polishResult.polished, "utf-8");
+            finalContent = polishResult.polished;
+            console.log("[润色] 已覆盖保存");
+            await appendPreference(polishAnswer.trim(), `润色指令 - ${item.task}`);
+          } else {
+            console.log("[润色] 保留原文");
+          }
+        }
+
         chapterAccepted = true;
-        console.log(`[自评] 通过（${review.score}分），继续下一章`);
 
         // 高分章节自动提取佳段
-        if (review.score >= 5 && result.content.length > 500) {
+        if (review.score >= 5 && finalContent.length > 500) {
           const tags = [meta.mood || "通用", ...(meta.required_scenes || []).slice(0, 2)];
-          const midStart = Math.floor(result.content.length * 0.3);
-          const excerpt = result.content.slice(midStart, midStart + 400).trim();
+          const midStart = Math.floor(finalContent.length * 0.3);
+          const excerpt = finalContent.slice(midStart, midStart + 400).trim();
           await addEntry("example", tags, `《${this.novelTitle}》${item.task}`, excerpt, "自评满分章节");
           console.log(`[知识库] 已提取佳段（标签：${tags.join("、")}）`);
         }
 
         // 更新统计
-        const wordCount = result.content.replace(/\s/g, "").length;
+        const wordCount = finalContent.replace(/\s/g, "").length;
         await this.state.updateStats({
           chaptersCompleted: this.state.data.stats.chaptersCompleted + 1,
           totalWords: this.state.data.stats.totalWords + wordCount,
@@ -516,6 +597,178 @@ export class Orchestrator {
         console.log(`[自评] 已达最大重写次数（${MAX_REWRITES}次），保留当前版本`);
         chapterAccepted = true;
       }
+    }
+  }
+
+  // ── 新版写作方法（用于骨架模式和断点续传）────────────────────────────────
+
+  private async writeAndVerifyChapter(chapterNum: number): Promise<void> {
+    // 加载章节元数据
+    const chapters = (await loadChapters(this.novelDir)) ?? [];
+    const meta = chapters[chapterNum - 1];
+    if (!meta) {
+      throw new Error(`第 ${chapterNum} 章元数据不存在`);
+    }
+
+    const chapterTitle = meta.title;
+    const MAX_REWRITES = 3;
+    const REVIEW_THRESHOLD = 4;
+
+    // 获取当前章节进度
+    let progress = this.state.getChapterProgress(chapterNum);
+    if (!progress) {
+      await this.state.updateChapterProgress(chapterNum, "pending");
+      progress = this.state.getChapterProgress(chapterNum)!;
+    }
+
+    let writeAttempt = progress.attempts;
+    let chapterAccepted = false;
+
+    // 构建写作上下文（简化版）
+    const detected = await detectFiles(this.novelDir);
+    const voiceProfiles = await fs.readFile(
+      path.join(this.novelDir, "_voice_profiles.md"),
+      "utf-8"
+    ).catch(() => "");
+    const todo = new TodoList();
+    const todoFilepath = path.join(this.novelDir, "_todo.json");
+
+    const writeCtx = await this.buildWriteContext(
+      chapterNum, chapterTitle, meta, chapters, detected, voiceProfiles, todo, todoFilepath
+    );
+
+    // 生成章节计划
+    const chapterPlan = await this.planChapter(chapterNum, chapterTitle, meta, writeCtx);
+    writeCtx.chapterPlan = planToXml(chapterPlan);
+
+    while (!chapterAccepted && writeAttempt < MAX_REWRITES) {
+      writeAttempt++;
+
+      try {
+        if (writeAttempt > 1) {
+          console.log(`\n[重写] 第 ${writeAttempt} 次尝试：${chapterTitle}`);
+          await cleanupForRewrite(this.novelDir, chapterNum);
+        }
+
+        // 执行写作 Agent
+        const result = await runWriterAgent(writeCtx);
+
+        if (!result.success || !result.content) {
+          console.log("[自评] 未找到章节文件，跳过自评");
+          chapterAccepted = true;
+          break;
+        }
+
+        // 更新进度：草稿完成
+        await this.state.updateChapterProgress(chapterNum, "draft_done");
+
+        // HITL：用户审阅
+        console.log(`\n── [${chapterTitle} 正文] ${"─".repeat(20)}`);
+        console.log(result.content);
+        console.log("─".repeat(50));
+
+        const userReview = await askLine("审阅章节：(y=通过并自评 / s=直接通过跳过自评 / 输入修改意见重写) ");
+
+        if (userReview.toLowerCase() === "s") {
+          chapterAccepted = true;
+          console.log("[审阅] 用户直接通过，跳过自评");
+          await this.state.updateChapterProgress(chapterNum, "complete");
+          break;
+        } else if (userReview.toLowerCase() !== "y") {
+          await appendPreference(userReview, `章节审阅 - ${chapterTitle}`);
+          console.log("[审阅] 根据用户反馈重写...（反馈已沉淀）");
+          writeCtx.meta = {
+            ...writeCtx.meta,
+            transition_notes: (writeCtx.meta.transition_notes ?? "") + `；用户修改意见：${userReview}`,
+          };
+          await this.state.updateStats({ totalRewrites: (this.state.data.stats.totalRewrites + 1) });
+          await this.state.recordChapterAttempt(chapterNum);
+          continue;
+        }
+
+        // 验证和自评
+        const verifyResult = await verifyAgainstPlan(result.content, chapterPlan, meta);
+        console.log(`\n[验证] ${verifyResult.summary}`);
+
+        console.log(`[自评] 正在评审 ${chapterTitle}...`);
+        const review = await reviewChapter(this.novelTitle, chapterTitle, result.content, meta, this.styleGuide);
+
+        console.log(`[自评] 评分：${review.score}/5 — ${review.feedback}`);
+        if (review.weak_sections.length > 0) {
+          console.log(`[自评] 薄弱点：${review.weak_sections.join("；")}`);
+        }
+
+        // 更新进度：审阅完成
+        await this.state.updateChapterProgress(chapterNum, "reviewed");
+        await this.state.recordChapterScore(chapterNum, review.score);
+
+        if (review.score >= REVIEW_THRESHOLD) {
+          chapterAccepted = true;
+          await this.state.updateChapterProgress(chapterNum, "complete");
+          console.log(`✅ ${chapterTitle} 通过自评（${review.score}/5）`);
+        } else {
+          const rewriteChoice = await askLine(`评分较低（${review.score}/5），是否重写？(y/n) `);
+          if (rewriteChoice.toLowerCase() === "y") {
+            await this.state.recordChapterAttempt(chapterNum);
+            continue;
+          } else {
+            chapterAccepted = true;
+            await this.state.updateChapterProgress(chapterNum, "complete");
+          }
+        }
+
+      } catch (error) {
+        console.error(`\n❌ 第 ${chapterNum} 章生成失败:`, error);
+        await this.state.recordChapterAttempt(chapterNum, String(error));
+
+        if (writeAttempt >= MAX_REWRITES) {
+          console.error(`第 ${chapterNum} 章已重试 ${MAX_REWRITES} 次，跳过`);
+          const answer = await askLine("是否继续尝试？(y/n) ");
+          if (answer === "y") {
+            writeAttempt = 0;
+            continue;
+          }
+          throw error;
+        }
+
+        const answer = await askLine("是否重试？(y/n) ");
+        if (answer === "y") {
+          continue;
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    if (!chapterAccepted) {
+      console.log(`\n⚠️  ${chapterTitle} 未通过（已达最大重写次数）`);
+    }
+  }
+
+  private async reviewAndRewrite(chapterNum: number): Promise<void> {
+    const files = await fs.readdir(this.novelDir);
+    const chapterFile = files.find(f => f.startsWith(String(chapterNum).padStart(3, "0")));
+
+    if (!chapterFile) {
+      console.error(`第 ${chapterNum} 章文件不存在`);
+      return;
+    }
+
+    const content = await fs.readFile(path.join(this.novelDir, chapterFile), "utf-8");
+    const chapters = (await loadChapters(this.novelDir)) ?? [];
+    const meta = chapters[chapterNum - 1];
+
+    const review = await reviewChapter(this.novelTitle, meta.title, content, meta, this.styleGuide);
+    console.log(`[审阅] 评分：${review.score}/5 — ${review.feedback}`);
+
+    await this.state.recordChapterScore(chapterNum, review.score);
+    await this.state.updateChapterProgress(chapterNum, "reviewed");
+
+    const answer = await askLine("是否接受当前版本？(y/n) ");
+    if (answer === "y") {
+      await this.state.updateChapterProgress(chapterNum, "complete");
+    } else {
+      await this.writeAndVerifyChapter(chapterNum);
     }
   }
 
@@ -727,6 +980,176 @@ export class Orchestrator {
       const label = choice === "2" ? "跳过" : "标记番外";
       console.log(`[分析] 缺失章节已${label}`);
       await this.state.addDecision("analysis", "缺失章节处理", label);
+    }
+  }
+
+  // ── 骨架模式：只生成框架 ──────────────────────────────────
+
+  private async runSkeletonMode(): Promise<void> {
+    console.log("\n── 骨架模式：快速生成框架 ──────────────────────────────");
+
+    const detected = await detectFiles(this.novelDir);
+    const premise = await fs.readFile(path.join(this.novelDir, "_premise.md"), "utf-8").catch(() => "");
+    if (premise) console.log("[前提] 已加载 _premise.md");
+
+    const existingContext = "";  // 骨架模式不需要已有章节
+
+    // 1. 生成大纲
+    if (!detected.hasOutline) {
+      console.log("\n[1/4] 生成故事大纲...");
+      await hitlGate(
+        "故事大纲",
+        async () => await fs.readFile(path.join(this.novelDir, "_outline.md"), "utf-8"),
+        async (feedback) => {
+          await runPlanAgent("outline", {
+            novelTitle: this.novelTitle,
+            novelDir: this.novelDir,
+            styleGuide: this.styleGuide,
+            existingContext,
+            premise: premise || undefined,
+            feedback,
+            compactOptions: this.compactOptions,
+            onTool: this.onTool,
+          });
+        }
+      );
+      await this.state.markPlanningDone("outline");
+    } else {
+      console.log("[1/4] 大纲已存在，跳过");
+    }
+
+    // 2. 生成人物
+    if (!detected.hasCharacters) {
+      console.log("\n[2/4] 生成人物设定...");
+      await hitlGate(
+        "人物设定",
+        async () => await fs.readFile(path.join(this.novelDir, "_characters.md"), "utf-8"),
+        async (feedback) => {
+          await runPlanAgent("characters", {
+            novelTitle: this.novelTitle,
+            novelDir: this.novelDir,
+            styleGuide: this.styleGuide,
+            existingContext,
+            premise: premise || undefined,
+            feedback,
+            compactOptions: this.compactOptions,
+            onTool: this.onTool,
+          });
+        }
+      );
+      await this.state.markPlanningDone("characters");
+    } else {
+      console.log("[2/4] 人物设定已存在，跳过");
+    }
+
+    // 3. 生成关系
+    if (!detected.hasRelationships) {
+      console.log("\n[3/4] 生成人物关系...");
+      await hitlGate(
+        "人物关系",
+        async () => await fs.readFile(path.join(this.novelDir, "_relationships.md"), "utf-8"),
+        async (feedback) => {
+          await runPlanAgent("relationships", {
+            novelTitle: this.novelTitle,
+            novelDir: this.novelDir,
+            styleGuide: this.styleGuide,
+            existingContext,
+            premise: premise || undefined,
+            feedback,
+            compactOptions: this.compactOptions,
+            onTool: this.onTool,
+          });
+        }
+      );
+      await this.state.markPlanningDone("relationships");
+    } else {
+      console.log("[3/4] 人物关系已存在，跳过");
+    }
+
+    // 4. 生成简化版章节列表（只有 title + target_words + mood）
+    if (!detected.hasChapters) {
+      console.log("\n[4/4] 生成章节列表（简化版）...");
+      await hitlGate(
+        "章节列表",
+        async () => {
+          const raw = await fs.readFile(path.join(this.novelDir, "_chapters.json"), "utf-8");
+          const chapters = JSON.parse(raw) as ChapterMeta[];
+          return chapters.map((c, i) => `${i + 1}. ${c.title} (${c.target_words ?? 2000}字, ${c.mood ?? "未指定"})`).join("\n");
+        },
+        async (feedback) => {
+          await runChapterProposalAgent({
+            novelTitle: this.novelTitle,
+            novelDir: this.novelDir,
+            styleGuide: this.styleGuide,
+            existingContext,
+            premise: premise || undefined,
+            feedback,
+            compactOptions: this.compactOptions,
+            onTool: this.onTool,
+          });
+        }
+      );
+      await this.state.markPlanningDone("chapters");
+    } else {
+      console.log("[4/4] 章节列表已存在，跳过");
+    }
+
+    console.log("\n✅ 骨架生成完成！");
+    console.log("\n下一步：");
+    console.log("  - 检查生成的框架文件（_outline.md, _characters.md, _relationships.md, _chapters.json）");
+    console.log("  - 满意后，使用 --mode full 开始完整写作流程");
+    console.log("  - 或使用 --mode chapter --chapter N 单独生成某一章");
+
+    await this.state.setPhase("planning");
+    await this.state.pauseSession(["框架已生成，等待用户确认后开始写作"]);
+  }
+
+  // ── 断点续传：从上次失败的地方继续 ──────────────────────
+
+  private async resumeFromCheckpoint(progress: import("./novel-state.js").ChapterProgress): Promise<void> {
+    const { chapterNum, status } = progress;
+
+    console.log(`\n从第 ${chapterNum} 章继续（状态: ${status}）...`);
+
+    switch (status) {
+      case "pending":
+        // 从头开始生成
+        console.log("[续传] 从头生成章节");
+        await this.writeAndVerifyChapter(chapterNum);
+        break;
+
+      case "summary_done":
+        // 概要已完成，扩写全章（暂未实现，先按完整流程）
+        console.log("[续传] 概要已完成，生成全章");
+        await this.writeAndVerifyChapter(chapterNum);
+        break;
+
+      case "draft_done":
+        // 草稿已完成，进入 review
+        console.log("[续传] 草稿已完成，进入审阅");
+        await this.reviewAndRewrite(chapterNum);
+        break;
+
+      case "reviewed":
+        // review 已完成，等待用户确认
+        console.log("[续传] 审阅已完成，等待最终确认");
+        const answer = await askLine("是否接受当前版本？(y/n) ");
+        if (answer === "y") {
+          await this.state.updateChapterProgress(chapterNum, "complete");
+          console.log(`✅ 第 ${chapterNum} 章已完成`);
+        } else {
+          await this.writeAndVerifyChapter(chapterNum);
+        }
+        break;
+    }
+
+    // 继续后续章节
+    const nextUnfinished = this.state.getUnfinishedChapters();
+    if (nextUnfinished.length > 0) {
+      const answer = await askLine(`继续下一章（第 ${nextUnfinished[0].chapterNum} 章）？(y/n) `);
+      if (answer === "y") {
+        await this.resumeFromCheckpoint(nextUnfinished[0]);
+      }
     }
   }
 }

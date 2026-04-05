@@ -48,11 +48,124 @@ function nextToolId(): string {
   return `toolu_mock_${++globalToolId}`;
 }
 
+// ── MockStream（兼容 agentLoop 的 for-await + finalMessage）──
+
+interface MockStreamEvent {
+  type: string;
+  content_block?: { type: string; id?: string; name?: string };
+  delta?: { type: string; text?: string; partial_json?: string };
+}
+
+class MockStream {
+  private blocks: MockContentBlock[];
+  private model: string;
+
+  constructor(blocks: MockContentBlock[], model: string) {
+    this.blocks = blocks;
+    this.model = model;
+  }
+
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<MockStreamEvent> {
+    yield { type: "message_start" };
+
+    for (const block of this.blocks) {
+      if (block.type === "tool_use") {
+        yield {
+          type: "content_block_start",
+          content_block: { type: "tool_use", id: block.id, name: block.name },
+        };
+        yield {
+          type: "content_block_delta",
+          delta: { type: "input_json_delta", partial_json: JSON.stringify(block.input) },
+        };
+        yield { type: "content_block_stop" };
+      } else {
+        yield {
+          type: "content_block_start",
+          content_block: { type: "text" },
+        };
+        yield {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: block.text },
+        };
+        yield { type: "content_block_stop" };
+      }
+    }
+  }
+
+  async finalMessage(): Promise<MockResponse> {
+    const hasToolUse = this.blocks.some(b => b.type === "tool_use");
+    return {
+      id: `msg_mock_${Date.now()}`,
+      type: "message",
+      role: "assistant",
+      content: this.blocks,
+      model: this.model,
+      stop_reason: hasToolUse ? "tool_use" : "end_turn",
+      stop_sequence: null,
+      usage: { input_tokens: 100, output_tokens: 50 },
+    };
+  }
+}
+
 class MockMessages {
   private roleName: string;
 
   constructor(roleName: string) {
     this.roleName = roleName;
+  }
+
+  /**
+   * Mock stream() — 返回一个对象，兼容 agentLoop 和 generateOpeningVariants。
+   * 模拟 Anthropic SDK 的 MessageStream：async iterable + finalMessage()。
+   */
+  stream(params: {
+    model?: string;
+    system?: string;
+    messages: Array<{ role: string; content: unknown }>;
+    tools?: unknown[];
+    max_tokens?: number;
+  }): MockStream {
+    const hasTools = !!(params.tools && params.tools.length > 0);
+    const hasToolResults = this.containsToolResults(params.messages);
+    const agentType = this.detectAgentType(params.system ?? "", params.messages);
+
+    // 记录 API 调用
+    report.recordApiCall({
+      timestamp: Date.now(),
+      role: this.roleName,
+      agentType,
+      isAgentLoop: hasTools,
+      isFollowUp: hasToolResults,
+      systemPromptPreview: (params.system ?? "").slice(0, 200).replace(/\n/g, " "),
+      userMessagePreview: this.extractUserMessage(params.messages).slice(0, 200),
+      responseType: "text",
+      toolsCalled: [],
+      durationMs: 0,
+    });
+
+    if (hasTools && !hasToolResults) {
+      // agentLoop 第一轮：返回工具调用
+      const toolBlocks = this.generateToolCalls(agentType, params);
+      for (const block of toolBlocks) {
+        if (block.type === "tool_use") {
+          report.recordToolCall({
+            toolName: block.name,
+            inputPreview: JSON.stringify(block.input).slice(0, 150),
+            outputPreview: "(pending execution by handler)",
+          });
+        }
+      }
+      return new MockStream(toolBlocks, params.model ?? "mock-model");
+    } else if (hasTools && hasToolResults) {
+      // agentLoop 后续轮：结束循环
+      const text = this.getCompletionText(agentType);
+      return new MockStream([{ type: "text", text }], params.model ?? "mock-model");
+    } else {
+      // 直接调用（generateOpeningVariants 等）
+      const directResponse = this.generateDirectResponse(agentType, params);
+      return new MockStream([{ type: "text", text: directResponse }], params.model ?? "mock-model");
+    }
   }
 
   async create(params: {
@@ -270,6 +383,9 @@ class MockMessages {
           score: 4,
           feedback: "[verify-mock] 整体良好，语言有质感，情节推进自然。",
           weak_sections: ["[verify-mock] 中段节奏略缓"],
+          weak_spots: [
+            { excerpt: "[verify-mock] 她心想这一切都是命运", issue: "情绪直白", suggestion: "用行为细节替代内心独白直写" },
+          ],
         });
 
       case "scene-check":

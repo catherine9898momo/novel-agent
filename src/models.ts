@@ -1,18 +1,23 @@
 /**
  * models.ts - 多模型路由配置（多服务商支持）
  *
- * 每个场景角色独立配置：模型 ID + API Key + Base URL
- * 不同服务商（Anthropic / 智谱 / MiniMax / OpenAI）各自走各自的 API
+ * 每个场景角色独立配置：模型 ID + Provider
+ * 支持多个服务商：Anthropic / DeepSeek Web / 智谱 / MiniMax / OpenAI
  *
  * 环境变量命名规则：
  *   {ROLE}_MODEL    — 模型 ID
+ *   {ROLE}_PROVIDER — 服务商 (anthropic | deepseek-web | openai-compatible)
  *   {ROLE}_API_KEY  — API Key（不设则回退默认）
  *   {ROLE}_BASE_URL — Base URL（不设则回退默认）
  *
+ * DeepSeek Web 特殊配置：
+ *   DEEPSEEK_TOKEN   — Bearer Token
+ *   DEEPSEEK_COOKIES — Session Cookies
+ *
  * 角色列表：
  *   - WRITE:    正文创作    → 建议 Claude Sonnet
- *   - PLAN:     规划策划    → 建议 GLM
- *   - REVIEW:   审稿分析    → 建议 GLM
+ *   - PLAN:     规划策划    → 建议 DeepSeek / GLM
+ *   - REVIEW:   审稿分析    → 建议 DeepSeek / GLM
  *   - COMPRESS: 上下文压缩  → 建议 MiniMax
  *   - EXTRACT:  辅助提取    → 建议 MiniMax
  *   - OPUS:     关键章升级  → 建议 Claude Opus
@@ -28,18 +33,39 @@ dotenv.config();
 const _mockFactory = (globalThis as Record<string, unknown>).__VERIFY_MOCK_CLIENT_FACTORY__ as
   ((role: string) => { messages: unknown; baseURL: string }) | undefined;
 
+// ── Provider 类型 ────────────────────────────────────────
+
+export type ProviderType = "anthropic" | "deepseek-web" | "openai-compatible";
+
+export interface ModelEndpoint {
+  client: Anthropic;  // 兼容 Anthropic SDK 接口
+  model: string;
+  provider: ProviderType;
+}
+
+// ── DeepSeek Web Client 懒加载 ──────────────────────────
+
+let _deepseekClient: unknown = undefined;
+
+function getDeepSeekClient(): unknown {
+  if (_deepseekClient === undefined) {
+    // 懒加载，避免循环依赖
+    import("./providers/deepseek-web.js")
+      .then(({ createDeepSeekClient }) => {
+        _deepseekClient = createDeepSeekClient();
+      })
+      .catch(() => {
+        _deepseekClient = null;
+      });
+  }
+  return _deepseekClient;
+}
+
 // ── 默认配置（全局兜底）──────────────────────────────────
 const DEFAULT_API_KEY  = process.env.ANTHROPIC_API_KEY ?? "";
 const DEFAULT_BASE_URL = process.env.ANTHROPIC_BASE_URL;
 const DEFAULT_MODEL    = process.env.MODEL_ID ?? "claude-sonnet-4-20250514";
-
-/**
- * 模型端点：一个 Anthropic client 实例 + 对应的模型 ID
- */
-export interface ModelEndpoint {
-  client: Anthropic;
-  model: string;
-}
+const DEFAULT_PROVIDER: ProviderType = "anthropic";
 
 // ── client 缓存（相同 baseURL + apiKey 复用同一个 client）──
 const clientCache = new Map<string, Anthropic>();
@@ -71,7 +97,24 @@ function buildEndpoint(role: string): ModelEndpoint {
     return {
       client: _mockFactory(role.toLowerCase()) as unknown as Anthropic,
       model: `mock-${role.toLowerCase()}`,
+      provider: "anthropic",
     };
+  }
+
+  const provider = (process.env[`${role}_PROVIDER`] as ProviderType) ?? DEFAULT_PROVIDER;
+  
+  // DeepSeek Web 特殊处理
+  if (provider === "deepseek-web") {
+    const dsClient = getDeepSeekClient();
+    if (dsClient) {
+      return {
+        client: dsClient as unknown as Anthropic,
+        model: process.env[`${role}_MODEL`] ?? "deepseek-chat",
+        provider: "deepseek-web",
+      };
+    }
+    // DeepSeek 配置失败，回退到默认
+    console.warn(`[models] DeepSeek Web 配置缺失，${role} 回退到 Anthropic`);
   }
 
   const apiKey  = process.env[`${role}_API_KEY`]  ?? DEFAULT_API_KEY;
@@ -81,6 +124,7 @@ function buildEndpoint(role: string): ModelEndpoint {
   return {
     client: getOrCreateClient(apiKey, baseURL),
     model,
+    provider: provider === "deepseek-web" ? "anthropic" : provider,
   };
 }
 
@@ -121,7 +165,8 @@ export function printModelConfig(): void {
   for (const [role, label] of Object.entries(labels)) {
     const ep = endpoints[role as ModelRole];
     const base = ep.client.baseURL || "(默认)";
-    console.log(`  ${label} (${role}):  ${ep.model}  ← ${base}`);
+    const prov = ep.provider === "deepseek-web" ? "[DeepSeek Web]" : "";
+    console.log(`  ${label} (${role}):  ${ep.model}  ← ${base} ${prov}`);
   }
   console.log("───────────────────────────────────────────────\n");
 }

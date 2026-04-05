@@ -17,10 +17,17 @@ import type { ChapterPlan } from "../xml-plan.js";
 
 // ── 章节自评 ──────────────────────────────────────────────
 
+export interface WeakSpot {
+  excerpt: string;      // 原文摘录（20-50字）
+  issue: string;        // 问题类型（如：情绪直白、对话废话、过渡生硬）
+  suggestion: string;   // 改进建议
+}
+
 export interface ChapterReview {
   score: number;
   feedback: string;
-  weak_sections: string[];
+  weak_sections: string[];       // 向后兼容
+  weak_spots: WeakSpot[];        // 精确标记：需要人工重写的段落
 }
 
 export async function reviewChapter(
@@ -37,7 +44,7 @@ export async function reviewChapter(
 
   const response = await endpoints.review.client.messages.create({
     model: endpoints.review.model,
-    max_tokens: 500,
+    max_tokens: 1200,
     messages: [{
       role: "user",
       content: `你是一位以严苛著称的古言言情小说主编，评审作品时宁可打低分也绝不放水。你的标准是出版级别的。
@@ -56,8 +63,17 @@ ${content}
 {
   "score": 评分（1-5整数，4分为及格线）,
   "feedback": "总体评价和主要问题（100字以内）",
-  "weak_sections": ["最弱的段落或问题点1", "问题点2"]
+  "weak_sections": ["问题点概述1", "问题点概述2"],
+  "weak_spots": [
+    {"excerpt": "摘录原文中最需要改进的句子或段落（20-50字）", "issue": "问题类型", "suggestion": "具体改进建议"}
+  ]
 }
+
+weak_spots 要求：
+- 摘录必须是原文中的原话，不要改写
+- 重点标记：情绪直白外露、对话废话、辞藻堆砌、过渡生硬、人物声音不一致 等问题
+- 最多标记 5 个最严重的问题点
+- 每个 suggestion 要具体可执行，不要泛泛而谈
 
 评分标准（对照风格指南中的范文水准）：
 - 5分：达到范文水准——语言如刀，情感克制但读者会疼，每句对话都在做事，场景过渡浑然天成
@@ -81,12 +97,19 @@ ${content}
     .join("");
 
   const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) ?? rawText.match(/(\{[\s\S]*\})/);
-  if (!jsonMatch) return { score: 3, feedback: "无法解析评审结果", weak_sections: [] };
+  if (!jsonMatch) return { score: 3, feedback: "无法解析评审结果", weak_sections: [], weak_spots: [] };
 
   try {
-    return JSON.parse(jsonMatch[1]) as ChapterReview;
+    const parsed = JSON.parse(jsonMatch[1]) as ChapterReview;
+    if (!parsed.weak_spots) parsed.weak_spots = [];
+    parsed.weak_spots = parsed.weak_spots.map((weakSpot) => ({
+      excerpt: weakSpot.excerpt,
+      issue: weakSpot.issue,
+      suggestion: weakSpot.suggestion,
+    }));
+    return parsed;
   } catch {
-    return { score: 3, feedback: "JSON 解析失败", weak_sections: [] };
+    return { score: 3, feedback: "JSON 解析失败", weak_sections: [], weak_spots: [] };
   }
 }
 

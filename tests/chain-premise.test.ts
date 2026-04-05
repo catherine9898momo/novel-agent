@@ -93,9 +93,9 @@ describe("链路：完整小说目录结构验证", () => {
       ]),
     );
 
-    // 验证 detectState 正确识别
-    const { detectState } = await import("../src/novel-agent.js");
-    const state = await detectState(novelDir);
+    // 验证 detectFiles 正确识别
+    const { detectFiles } = await import("../src/orchestrator.js");
+    const state = await detectFiles(novelDir);
 
     expect(state.hasOutline).toBe(true);
     expect(state.hasCharacters).toBe(true);
@@ -106,7 +106,7 @@ describe("链路：完整小说目录结构验证", () => {
 
     // 模拟写了第 1 章
     await fs.writeFile(path.join(novelDir, "001-冤家路窄.md"), "正文内容...");
-    const state2 = await detectState(novelDir);
+    const state2 = await detectFiles(novelDir);
     expect(state2.existingChapterNums).toEqual([1]);
 
     // 验证 loadChapters

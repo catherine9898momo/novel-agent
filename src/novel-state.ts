@@ -49,6 +49,16 @@ export interface WritingStats {
   scores: Record<number, number>;   // chapterNum -> score
 }
 
+export interface ChapterProgress {
+  chapterNum: number;
+  status: "pending" | "summary_done" | "draft_done" | "reviewed" | "complete";
+  summaryPath?: string;
+  draftPath?: string;
+  lastCheckpoint?: string;  // checkpoint 文件路径
+  attempts: number;         // 重试次数
+  lastError?: string;
+}
+
 export interface NovelSessionState {
   novelTitle: string;
   style: string;
@@ -75,6 +85,9 @@ export interface NovelSessionState {
 
   // 写作统计
   stats: WritingStats;
+
+  // 章节进度（断点续传）
+  chapterProgress: Record<number, ChapterProgress>;
 }
 
 // ── 默认状态 ──────────────────────────────────────────────
@@ -103,6 +116,7 @@ function createDefaultState(novelTitle: string, style: string): NovelSessionStat
       totalRewrites: 0,
       scores: {},
     },
+    chapterProgress: {},
   };
 }
 
@@ -183,6 +197,56 @@ export class NovelState {
   getDecisions(phase?: WorkflowPhase): Decision[] {
     if (phase) return this.state.decisions.filter((d) => d.phase === phase);
     return this.state.decisions;
+  }
+
+  // ── 章节进度管理（断点续传）──────────────────────────────
+
+  async updateChapterProgress(
+    chapterNum: number,
+    status: ChapterProgress["status"],
+    checkpointPath?: string
+  ): Promise<void> {
+    if (!this.state.chapterProgress[chapterNum]) {
+      this.state.chapterProgress[chapterNum] = {
+        chapterNum,
+        status: "pending",
+        attempts: 0
+      };
+    }
+
+    this.state.chapterProgress[chapterNum].status = status;
+    if (checkpointPath) {
+      this.state.chapterProgress[chapterNum].lastCheckpoint = checkpointPath;
+    }
+
+    await this.save();
+  }
+
+  async recordChapterAttempt(chapterNum: number, error?: string): Promise<void> {
+    if (!this.state.chapterProgress[chapterNum]) {
+      this.state.chapterProgress[chapterNum] = {
+        chapterNum,
+        status: "pending",
+        attempts: 0
+      };
+    }
+
+    this.state.chapterProgress[chapterNum].attempts += 1;
+    if (error) {
+      this.state.chapterProgress[chapterNum].lastError = error;
+    }
+
+    await this.save();
+  }
+
+  getChapterProgress(chapterNum: number): ChapterProgress | null {
+    return this.state.chapterProgress[chapterNum] ?? null;
+  }
+
+  getUnfinishedChapters(): ChapterProgress[] {
+    return Object.values(this.state.chapterProgress)
+      .filter(p => p.status !== "complete")
+      .sort((a, b) => a.chapterNum - b.chapterNum);
   }
 
   // ── 待解决问题 ──────────────────────────────────────────

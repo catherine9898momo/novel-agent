@@ -27,6 +27,27 @@ export interface CompactOptions {
   compressModel?: string;    // 压缩专用模型（可用便宜模型，不传则用主模型）
 }
 
+/** 检查点：保存当前 messages，用于中断恢复 */
+export interface Checkpoint {
+  messages: Message[];       // 当前对话历史
+  timestamp: string;         // 保存时间
+  lastTool?: string;         // 最后执行的工具
+}
+
+/** 保存检查点到文件 */
+async function saveCheckpoint(file: string, checkpoint: Checkpoint): Promise<void> {
+  await import("fs/promises").then(fs => fs.writeFile(file, JSON.stringify(checkpoint, null, 2), "utf-8"));
+}
+
+/** 加载检查点 */
+export async function loadCheckpoint(file: string): Promise<Checkpoint | null> {
+  return await import("fs/promises").then(fs => 
+    fs.readFile(file, "utf-8")
+      .then(data => JSON.parse(data) as Checkpoint)
+      .catch(() => null)
+  );
+}
+
 /**
  * @param client         - Anthropic SDK 实例，负责发 API 请求
  * @param model          - 模型 ID，比如 claude-sonnet-4-20250514
@@ -48,10 +69,28 @@ export async function agentLoop(
     onToolCall?: (name: string, output: string) => void,
     compactOptions?: CompactOptions,
     onStream?: (chunk: string) => void,
+    checkpointFile?: string,   // 可选：检查点文件路径，工具完成后自动保存
+    streamTimeoutMs: number = 120_000,  // 流式超时：无新事件超过此时间则中止（默认 120s，大 input 的 TTFT 可达 70-90s）
+    maxRetries: number = 2,    // 超时/网络错误时自动重试次数
 ): Promise<void> {
+    let retryCount = 0;
     while (true) { // 无限循环，靠内部 return 退出——因为不知道 LLM 要调用几次工具
         // 记录开始时间
         const startTime = Date.now();
+
+        // 超时控制：无新事件时自动中止
+        const abortController = new AbortController();
+        let timeoutHandle: NodeJS.Timeout | null = null;
+        const resetTimeout = () => {
+            if (timeoutHandle) clearTimeout(timeoutHandle);
+            timeoutHandle = setTimeout(() => {
+                console.error(`\n  ⏰ 流式超时: ${streamTimeoutMs / 1000}s 内无新事件，自动中止`);
+                abortController.abort();
+            }, streamTimeoutMs);
+        };
+        const clearStreamTimeout = () => {
+            if (timeoutHandle) { clearTimeout(timeoutHandle); timeoutHandle = null; }
+        };
 
         // 使用流式 API，让用户看到实时生成
         const stream = client.messages.stream({
@@ -59,8 +98,11 @@ export async function agentLoop(
             system,
             messages,
             tools,
-            max_tokens: 8000,
-        });
+            max_tokens: 16000,
+        }, { signal: abortController.signal });
+
+        // 启动超时计时
+        resetTimeout();
 
         // 收集完整响应用于后续处理
         const contentBlocks: Anthropic.ContentBlock[] = [];
@@ -104,16 +146,18 @@ export async function agentLoop(
         };
 
         // 实时输出流式内容
-        for await (const event of stream) {
-            switch (event.type) {
-                case "message_start":
-                    if (!thinkingTimer) {
-                        thinkingTimer = startThinkingAnimation();
-                    }
-                    break;
+        try {
+            for await (const event of stream) {
+                resetTimeout(); // 收到事件，重置超时
+                switch (event.type) {
+                    case "message_start":
+                        if (!thinkingTimer) {
+                            thinkingTimer = startThinkingAnimation();
+                        }
+                        break;
 
-                case "content_block_start":
-                    if (event.content_block.type === "tool_use") {
+                    case "content_block_start":
+                        if (event.content_block.type === "tool_use") {
                         stopCursorTimer();
                         if (thinkingTimer) {
                             clearInterval(thinkingTimer);
@@ -200,9 +244,40 @@ export async function agentLoop(
                     break;
             }
         }
+        } catch (err: unknown) {
+            // 网络中断或流式错误或超时
+            clearStreamTimeout();
+            if (thinkingTimer) clearInterval(thinkingTimer);
+            stopCursorTimer();
+            const e = err as Error;
+            console.error(`\n  ❌ 流式响应中断: ${e.message}`);
+
+            // 自动重试（带退避等待）
+            if (retryCount < maxRetries) {
+                retryCount++;
+                const is503 = (e as { status?: number }).status === 503;
+                const waitSec = is503 ? 15 : 5; // 503 限流等久一点
+                console.log(`  🔄 自动重试 (${retryCount}/${maxRetries})，${waitSec}s 后重试...`);
+                await new Promise(r => setTimeout(r, waitSec * 1000));
+                continue; // 回到 while 循环顶部，用相同的 messages 重新请求
+            }
+
+            // 重试用尽，保存检查点
+            if (checkpointFile) {
+                await saveCheckpoint(checkpointFile, {
+                    messages: [...messages],
+                    timestamp: new Date().toISOString(),
+                    lastTool: currentToolUse?.name,
+                });
+                console.log(`  📌 检查点已保存，重新运行可恢复`);
+            }
+            throw err;
+        }
+        clearStreamTimeout();
         if (thinkingTimer) clearInterval(thinkingTimer);
         stopCursorTimer();
         if (hasOutput) process.stdout.write("\n"); // 换行结束输出
+        retryCount = 0; // 成功完成一轮，重置重试计数
 
         // 获取最终响应以检查 stop_reason
         const response = await stream.finalMessage();
@@ -240,10 +315,20 @@ export async function agentLoop(
                     ? await handler(block.input as Record<string, unknown>)
                     : `Unknown tool: ${block.name}`;
             } catch (e) {
-                output = `Error: ${e}`; // 工具执行失败，把错误告诉 LLM，让它决定怎么处理
+                output = `Error: ${e}`;
+                console.error(`  ❌ 工具执行失败: ${block.name}\n     输入: ${JSON.stringify(block.input).slice(0, 200)}\n     错误: ${e}`);
             }
 
             onToolCall?.(block.name, output.slice(0, 200)); // 回调通知外部，截断是避免日志太长
+
+            // 保存检查点（工具调用完成即保存，确保中断后可恢复）
+            if (checkpointFile) {
+              await saveCheckpoint(checkpointFile, {
+                messages: [...messages], // 当前历史（不含本轮 assistant + tool results）
+                timestamp: new Date().toISOString(),
+                lastTool: block.name,
+              });
+            }
 
             results.push({
                 type: "tool_result",

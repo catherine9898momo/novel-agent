@@ -28,6 +28,7 @@ import type { TodoList } from "../todo.js";
 import type { ChapterMeta } from "../novel-agent.js";
 import type { ChapterPlan } from "../xml-plan.js";
 import { planToXml } from "../xml-plan.js";
+import { extractSkeleton } from "../plan-skeleton.js";
 
 // ── 写作上下文（精准注入所需的全部信息）──────────────────
 
@@ -115,11 +116,11 @@ function buildWriterSystem(ctx: WriteContext): string {
 ## 写作风格
 ${ctx.styleGuide}
 
-## 故事大纲
-${ctx.outline}
+## 故事大纲（骨架）
+${extractSkeleton(ctx.outline)}
 
-## 人物设定
-${ctx.characters}
+## 人物设定（骨架）
+${extractSkeleton(ctx.characters)}
 
 ## 人物关系
 ${ctx.relationships}
@@ -210,6 +211,142 @@ export async function runWriterAgent(ctx: WriteContext): Promise<WriteResult> {
     filePath: path.join(ctx.novelDir, writtenFile),
     content,
     system,
+  };
+}
+
+// ── 多版本开头选择 ──────────────────────────────────────────
+
+/**
+ * 生成 N 个不同风格的开头段落，让用户选择
+ * 返回选中的开头文本，会注入到后续写作 messages 中
+ */
+export async function generateOpeningVariants(
+  ctx: WriteContext,
+  count = 3,
+): Promise<string | null> {
+  const { askLine } = await import("../cli.js");
+  const knowledgeMaterial = await getRelevantMaterial(ctx.meta.mood, ctx.meta.required_scenes, 3);
+
+  const system = `你是一位古言言情小说作家。请为《${ctx.novelTitle}》${ctx.chapterTitle}生成 ${count} 个不同风格的开头段落（各约 200-300 字）。
+
+## 写作风格
+${ctx.styleGuide}
+${knowledgeMaterial}
+## 人物设定（骨架）
+${extractSkeleton(ctx.characters)}
+
+## 本章写作计划
+${typeof ctx.chapterPlan === "string" ? ctx.chapterPlan : planToXml(ctx.chapterPlan)}
+${ctx.lastChapterEnding ? `\n## 上一章结尾（保持衔接）\n${ctx.lastChapterEnding}\n` : ""}
+## 要求
+- 每个版本用不同的切入角度（如：环境开篇、对话开篇、动作开篇、内心独白开篇等）
+- 用 === 版本 1 === / === 版本 2 === / === 版本 3 === 分隔
+- 每个版本独立完整，不要互相引用`;
+
+  const messages: Message[] = [
+    { role: "user", content: `请生成 ${count} 个不同的开头段落。` },
+  ];
+
+  // 用 plan 端点（便宜）而非 write 端点
+  const stream = endpoints.plan.client.messages.stream({
+    model: endpoints.plan.model,
+    max_tokens: 4000,
+    system,
+    messages,
+  });
+
+  let fullText = "";
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+      process.stdout.write(event.delta.text);
+      fullText += event.delta.text;
+    }
+  }
+  console.log();
+
+  // 解析版本
+  const variants = fullText.split(/===\s*版本\s*\d+\s*===/).filter(v => v.trim().length > 50);
+  if (variants.length === 0) {
+    console.log("[多版本] 解析失败，使用默认模式");
+    return null;
+  }
+
+  // 展示并让用户选择
+  for (let i = 0; i < variants.length; i++) {
+    console.log(`\n${'─'.repeat(20)} 版本 ${i + 1} ${'─'.repeat(20)}`);
+    console.log(variants[i].trim());
+  }
+  console.log('─'.repeat(50));
+
+  const choice = await askLine(`选择开头版本 (1-${variants.length}，直接回车跳过): `);
+  if (!choice || choice.trim() === "") return null;
+
+  const idx = parseInt(choice, 10) - 1;
+  if (idx >= 0 && idx < variants.length) {
+    console.log(`[多版本] 已选择版本 ${idx + 1}`);
+    return variants[idx].trim();
+  }
+  return null;
+}
+
+// ── AI 润色（人指定风格目标，AI 按指令调整）────────────────
+
+export interface PolishResult {
+  polished: string;
+  changes: string;   // AI 的修改说明
+}
+
+/**
+ * 对已完成章节做定向润色。
+ * @param content      原文
+ * @param instruction  用户的润色指令（如"对话更克制"、"加强环境描写"、"删掉所有心理独白直写"）
+ * @param styleGuide   风格指南
+ * @param weakSpots    reviewer 标记的薄弱点（可选，辅助定位）
+ */
+export async function polishChapter(
+  content: string,
+  instruction: string,
+  styleGuide: string,
+  weakSpots?: Array<{ excerpt: string; issue: string; suggestion: string }>,
+): Promise<PolishResult> {
+  const weakSpotsSection = weakSpots && weakSpots.length > 0
+    ? `\n## 审稿标记的薄弱点（重点打磨）\n${weakSpots.map(s => `- "${s.excerpt}" → 问题：${s.issue}，建议：${s.suggestion}`).join("\n")}\n`
+    : "";
+
+  const response = await endpoints.write.client.messages.create({
+    model: endpoints.write.model,
+    max_tokens: 16000,
+    messages: [{
+      role: "user",
+      content: `你是一位古言言情小说的资深润色编辑。请按照用户的润色指令，对以下章节进行定向修改。
+
+## 风格标准
+${styleGuide}
+${weakSpotsSection}
+## 用户润色指令
+${instruction}
+
+## 原文
+${content}
+
+## 润色规则
+- 只改需要改的地方，保留原文的好句子和整体结构
+- 不要改变剧情走向和人物关系
+- 不要增删大段内容，只做语言层面的打磨
+- 修改后的文字必须符合风格标准
+- 输出格式：先输出完整的润色后全文，然后在末尾用 === 修改说明 === 分隔，列出你做了哪些修改（简要）`,
+    }],
+  });
+
+  const rawText = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("");
+
+  const parts = rawText.split(/===\s*修改说明\s*===/);
+  return {
+    polished: parts[0]?.trim() ?? rawText,
+    changes: parts[1]?.trim() ?? "（无修改说明）",
   };
 }
 
