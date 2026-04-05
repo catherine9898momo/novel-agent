@@ -72,23 +72,42 @@ export async function runPlanAgent(
   }
   const priorContext = priorSections.length > 0 ? "\n" + priorSections.join("\n\n") + "\n" : "";
 
+  // 增量修改：如果有 feedback，读取当前规划文件
+  let existingPlan = "";
+  let isIncremental = false;
+  if (feedback) {
+    const currentPlan = await fs.readFile(path.join(novelDir, `_${type}.md`), "utf-8").catch(() => null);
+    if (currentPlan) {
+      existingPlan = `\n## 当前${TYPE_LABELS[type]}（需要修改）\n${currentPlan}\n`;
+      isIncremental = true;
+    }
+  }
+
   const premiseSection = premise ? `\n## 故事前提（用户设定，必须严格遵守）\n${premise}\n` : "";
   const feedbackSection = feedback ? `\n## 用户反馈（请根据此反馈修改）\n${feedback}\n` : "";
   const userPrefs = await loadPreferences();
   const prefsSection = userPrefs ? `\n## 用户偏好（来自历史反馈，请遵守）\n${userPrefs}\n` : "";
 
-  const system = `你是一位资深古言言情小说策划，正在为《${novelTitle}》生成${TYPE_LABELS[type]}。
+  // 根据是否增量修改，使用不同的指令
+  const taskInstruction = isIncremental
+    ? `根据用户反馈，对当前${TYPE_LABELS[type]}进行**局部修改**，只调整反馈中提到的部分，其余内容保持不变。不要重新生成整个文档。`
+    : `生成${TYPE_LABELS[type]}，要求：${TYPE_INSTRUCTIONS[type]}。必须与已有规划保持一致。`;
+
+  const system = `你是一位资深古言言情小说策划，正在为《${novelTitle}》${isIncremental ? "修改" : "生成"}${TYPE_LABELS[type]}。
 ${premiseSection}
 ## 写作风格参考
 ${styleGuide}
-${prefsSection}${existingContext}${priorContext}${feedbackSection}
+${prefsSection}${existingContext}${priorContext}${existingPlan}${feedbackSection}
 ## 任务
-生成${TYPE_LABELS[type]}，要求：${TYPE_INSTRUCTIONS[type]}。必须与已有规划保持一致。
+${taskInstruction}
 完成后调用 write_plan(type="${type}") 保存，然后回复"完成"。`;
 
   // 全新上下文——GSD 核心：每个 agent 拿到干净的 200k 窗口
   const messages: Message[] = [
-    { role: "user", content: `请为《${novelTitle}》生成${TYPE_LABELS[type]}，完成后保存。` },
+    { role: "user", content: isIncremental
+      ? `请根据用户反馈修改${TYPE_LABELS[type]}，只修改相关部分，保持其他内容不变。`
+      : `请为《${novelTitle}》生成${TYPE_LABELS[type]}，完成后保存。`
+    },
   ];
 
   await agentLoop(

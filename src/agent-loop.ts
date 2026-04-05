@@ -68,6 +68,9 @@ export async function agentLoop(
         let currentToolUse: { id: string; name: string; input: string } | null = null;
         let hasOutput = false;
         let thinkingTimer: NodeJS.Timeout | null = null;
+        let cursorTimer: NodeJS.Timeout | null = null;
+        let cursorVisible = false;
+        let isReceivingContent = false;
 
         // 开始思考动画
         const startThinkingAnimation = () => {
@@ -76,6 +79,28 @@ export async function agentLoop(
                 dots = (dots % 3) + 1;
                 process.stdout.write(`\r  🤔 思考中${".".repeat(dots)}   `);
             }, 800);
+        };
+
+        // 启动闪烁光标和计时器
+        const startCursorTimer = () => {
+            return setInterval(() => {
+                if (!isReceivingContent) return;
+                const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
+                // 清除当前行并重新显示
+                const cursorChar = cursorVisible ? "▮" : " ";
+                process.stdout.write(`\r  ${elapsedSec}s ${cursorChar}`);
+                cursorVisible = !cursorVisible;
+            }, 500);
+        };
+
+        // 停止光标定时器
+        const stopCursorTimer = () => {
+            if (cursorTimer) {
+                clearInterval(cursorTimer);
+                cursorTimer = null;
+            }
+            // 清除光标
+            process.stdout.write("\r" + " ".repeat(30) + "\r");
         };
 
         // 实时输出流式内容
@@ -89,10 +114,11 @@ export async function agentLoop(
 
                 case "content_block_start":
                     if (event.content_block.type === "tool_use") {
+                        stopCursorTimer();
                         if (thinkingTimer) {
                             clearInterval(thinkingTimer);
                             thinkingTimer = null;
-                            process.stdout.write("\r" + " ".repeat(20) + "\r"); // 清除思考行
+                            process.stdout.write("\r" + " ".repeat(20) + "\r");
                         }
                         currentToolUse = {
                             id: event.content_block.id,
@@ -102,12 +128,18 @@ export async function agentLoop(
                         process.stdout.write(`  🛠️  准备调用: ${event.content_block.name}`);
                         hasOutput = true;
                     } else if (event.content_block.type === "text") {
+                        stopCursorTimer();
                         if (thinkingTimer) {
                             clearInterval(thinkingTimer);
                             thinkingTimer = null;
-                            process.stdout.write("\r" + " ".repeat(20) + "\r"); // 清除思考行
+                            process.stdout.write("\r" + " ".repeat(20) + "\r");
                         }
-                        if (!hasOutput) process.stdout.write("  ");
+                        if (!hasOutput) {
+                            process.stdout.write("  ");
+                            // 开始闪烁光标
+                            isReceivingContent = true;
+                            cursorTimer = startCursorTimer();
+                        }
                     }
                     break;
 
@@ -115,16 +147,24 @@ export async function agentLoop(
                     if (event.delta.type === "text_delta") {
                         const text = event.delta.text;
                         currentText += text;
-                        // 停止思考动画（如果还在运行）
+                        // 停止思考动画和光标（如果还在运行）
                         if (thinkingTimer) {
                             clearInterval(thinkingTimer);
                             thinkingTimer = null;
-                            process.stdout.write("\r" + " ".repeat(20) + "\r"); // 清除思考行
+                            process.stdout.write("\r" + " ".repeat(20) + "\r");
+                        }
+                        if (cursorTimer) {
+                            clearInterval(cursorTimer);
+                            cursorTimer = null;
+                            process.stdout.write("\r" + " ".repeat(30) + "\r  ");
                         }
                         // 打字机效果：直接输出到控制台
                         process.stdout.write(text);
                         onStream?.(text);
                         hasOutput = true;
+                        isReceivingContent = true;
+                        // 重新启动光标
+                        cursorTimer = startCursorTimer();
                     } else if (event.delta.type === "input_json_delta") {
                         if (currentToolUse) {
                             currentToolUse.input += event.delta.partial_json;
@@ -145,13 +185,12 @@ export async function agentLoop(
                             } as Anthropic.ContentBlock);
                         } catch {
                             contentBlocks.push({
-                                type: "tool_use",
                                 id: currentToolUse.id,
                                 name: currentToolUse.name,
                                 input: {},
                             } as Anthropic.ContentBlock);
                         }
-                        process.stdout.write(" ✓\n"); // 工具调用完成标记
+                        process.stdout.write(" ✓\n");
                         currentToolUse = null;
                     } else if (currentText) {
                         // 文本块完成
@@ -162,6 +201,7 @@ export async function agentLoop(
             }
         }
         if (thinkingTimer) clearInterval(thinkingTimer);
+        stopCursorTimer();
         if (hasOutput) process.stdout.write("\n"); // 换行结束输出
 
         // 获取最终响应以检查 stop_reason
