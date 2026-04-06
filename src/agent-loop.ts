@@ -252,8 +252,9 @@ export async function agentLoop(
             const e = err as Error;
             console.error(`\n  ❌ 流式响应中断: ${e.message}`);
 
-            // 自动重试（带退避等待）
-            if (retryCount < maxRetries) {
+            // 自动重试（带退避等待）—— 401 认证错误不重试
+            const isAuthError = (e as { status?: number }).status === 401;
+            if (retryCount < maxRetries && !isAuthError) {
                 retryCount++;
                 const is503 = (e as { status?: number }).status === 503;
                 const waitSec = is503 ? 15 : 5; // 503 限流等久一点

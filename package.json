@@ -8,6 +8,7 @@
     "analyze": "tsx src/analyzer.ts",
     "collect": "tsx src/web-collector.ts",
     "inspect": "tsx src/inspect.ts",
+    "ping": "tsx src/verify/ping.ts",
     "verify": "tsx src/verify/runner.ts",
     "verify:keep": "tsx src/verify/runner.ts --keep",
     "test": "vitest run",

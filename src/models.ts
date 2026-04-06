@@ -24,6 +24,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { OpenAICompatibleClient } from "./providers/openai-compatible.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -65,12 +66,23 @@ function getDeepSeekClient(): unknown {
 const DEFAULT_API_KEY  = process.env.ANTHROPIC_API_KEY ?? "";
 const DEFAULT_BASE_URL = process.env.ANTHROPIC_BASE_URL;
 const DEFAULT_MODEL    = process.env.MODEL_ID ?? "claude-sonnet-4-20250514";
-const DEFAULT_PROVIDER: ProviderType = "anthropic";
+const DEFAULT_PROVIDER: ProviderType = (process.env.DEFAULT_PROVIDER as ProviderType) || "anthropic";
 
 // ── client 缓存（相同 baseURL + apiKey 复用同一个 client）──
 const clientCache = new Map<string, Anthropic>();
+const openAIClientCache = new Map<string, OpenAICompatibleClient>();
 
-function getOrCreateClient(apiKey: string, baseURL?: string): Anthropic {
+function getOrCreateClient(apiKey: string, baseURL?: string, provider?: ProviderType): Anthropic | OpenAICompatibleClient {
+  if (provider === "openai-compatible") {
+    const cacheKey = `oai::${apiKey}::${baseURL ?? "default"}`;
+    let client = openAIClientCache.get(cacheKey);
+    if (!client) {
+      client = new OpenAICompatibleClient({ apiKey, baseURL: baseURL ?? "" });
+      openAIClientCache.set(cacheKey, client);
+    }
+    return client as unknown as Anthropic;
+  }
+
   const cacheKey = `${apiKey}::${baseURL ?? "default"}`;
   let client = clientCache.get(cacheKey);
   if (!client) {
@@ -78,7 +90,6 @@ function getOrCreateClient(apiKey: string, baseURL?: string): Anthropic {
       apiKey,
       baseURL,
       defaultHeaders: {
-        "x-api-key": apiKey,
         "Authorization": `Bearer ${apiKey}`,
       },
     });
@@ -122,7 +133,7 @@ function buildEndpoint(role: string): ModelEndpoint {
   const model   = process.env[`${role}_MODEL`]    ?? DEFAULT_MODEL;
 
   return {
-    client: getOrCreateClient(apiKey, baseURL),
+    client: getOrCreateClient(apiKey, baseURL, provider),
     model,
     provider: provider === "deepseek-web" ? "anthropic" : provider,
   };

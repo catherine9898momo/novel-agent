@@ -244,7 +244,7 @@ export class NovelState {
   }
 
   getUnfinishedChapters(): ChapterProgress[] {
-    return Object.values(this.state.chapterProgress)
+    return Object.values(this.state.chapterProgress ?? {})
       .filter(p => p.status !== "complete")
       .sort((a, b) => a.chapterNum - b.chapterNum);
   }

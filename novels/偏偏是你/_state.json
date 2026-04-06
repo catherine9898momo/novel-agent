@@ -7,7 +7,7 @@
     "outline": false,
     "characters": false,
     "relationships": false,
-    "chapters": false
+    "chapters": true
   },
   "decisions": [
     {
@@ -19,13 +19,18 @@
     }
   ],
   "openQuestions": [],
-  "sessions": [],
-  "currentSession": {
-    "startedAt": "2026-04-05T14:34:50.834Z",
-    "phase": "planning",
-    "accomplishments": [],
-    "nextSteps": []
-  },
+  "sessions": [
+    {
+      "startedAt": "2026-04-05T18:51:09.591Z",
+      "phase": "planning",
+      "accomplishments": [],
+      "nextSteps": [
+        "框架已生成，等待用户确认后开始写作"
+      ],
+      "endedAt": "2026-04-05T18:56:05.918Z"
+    }
+  ],
+  "currentSession": null,
   "stats": {
     "totalWords": 0,
     "chaptersCompleted": 0,

@@ -47,6 +47,11 @@ async function hitlGate(
   getContent: () => Promise<string>,
   regenerate: (feedback: string) => Promise<void>,
 ): Promise<void> {
+  // 首次：如果内容为空则先生成
+  let firstContent = await getContent().catch(() => "");
+  if (!firstContent.trim()) {
+    await regenerate("");
+  }
   while (true) {
     const content = await getContent();
     console.log(`\n── [${label}] 已生成 ${"─".repeat(Math.max(0, 40 - label.length))}`);
@@ -119,7 +124,7 @@ export class Orchestrator {
   private compactOptions: CompactOptions;
   private mode: GenerationMode;
 
-  constructor(novelTitle: string, novelDir: string, mode: GenerationMode = "full") {
+  constructor(novelTitle: string, novelDir: string, mode: GenerationMode = "skeleton") {
     this.novelTitle = novelTitle;
     this.novelDir = novelDir;
     this.mode = mode;
@@ -1072,7 +1077,8 @@ export class Orchestrator {
       await hitlGate(
         "章节列表",
         async () => {
-          const raw = await fs.readFile(path.join(this.novelDir, "_chapters.json"), "utf-8");
+          const raw = await fs.readFile(path.join(this.novelDir, "_chapters.json"), "utf-8").catch(() => "");
+          if (!raw) return "";
           const chapters = JSON.parse(raw) as ChapterMeta[];
           return chapters.map((c, i) => `${i + 1}. ${c.title} (${c.target_words ?? 2000}字, ${c.mood ?? "未指定"})`).join("\n");
         },
