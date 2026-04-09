@@ -56,7 +56,7 @@ async function main(): Promise<void> {
     report.recordPhaseStart("planning");
     report.recordPhaseStart("writing");
 
-    const orchestrator = new Orchestrator(VERIFY_NOVEL_TITLE, VERIFY_NOVEL_DIR);
+    const orchestrator = new Orchestrator(VERIFY_NOVEL_TITLE, VERIFY_NOVEL_DIR, "full");
     await orchestrator.run();
 
     report.recordPhaseEnd("planning");

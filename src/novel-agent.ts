@@ -54,7 +54,17 @@ export async function loadChapters(novelDir: string): Promise<ChapterMeta[] | nu
 // ── 小说选择 ──────────────────────────────────────────────────
 
 async function selectNovel(): Promise<string> {
-  const arg = process.argv[2];
+  const args = process.argv.slice(2);
+  // 支持 --novel <name> 和 --novel=<name> 两种形式
+  const novelFlagIdx = args.findIndex(a => a === "--novel" || a.startsWith("--novel="));
+  let arg: string | undefined;
+  if (novelFlagIdx >= 0) {
+    const flag = args[novelFlagIdx];
+    arg = flag.includes("=") ? flag.split("=")[1] : args[novelFlagIdx + 1];
+  } else if (args[0] && !args[0].startsWith("--")) {
+    // 兼容旧用法：直接传小说名（无 -- 前缀）
+    arg = args[0];
+  }
   if (arg) return arg;
 
   await fs.mkdir(NOVELS_DIR, { recursive: true });
@@ -84,11 +94,20 @@ async function selectNovel(): Promise<string> {
 
 // ── 主流程（委派给 Orchestrator）────────────────────────────
 
+function parseFlag(flag: string): string | undefined {
+  const args = process.argv.slice(2);
+  const idx = args.findIndex(a => a === `--${flag}` || a.startsWith(`--${flag}=`));
+  if (idx < 0) return undefined;
+  const a = args[idx];
+  return a.includes("=") ? a.split("=")[1] : args[idx + 1];
+}
+
 async function main() {
   const novelTitle = await selectNovel();
   const novelDir = path.join(NOVELS_DIR, novelTitle);
 
-  const orchestrator = new Orchestrator(novelTitle, novelDir);
+  const mode = (parseFlag("mode") ?? "skeleton") as import("./orchestrator.js").GenerationMode;
+  const orchestrator = new Orchestrator(novelTitle, novelDir, mode);
   await orchestrator.run();
 }
 

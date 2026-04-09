@@ -152,9 +152,9 @@ export async function printVerifyReport(novelDir: string): Promise<void> {
   const expectedFiles = [
     "_outline.md", "_characters.md", "_relationships.md",
     "_chapters.json", "_state.json", "STATE.md",
-    "_story_so_far.md", "_todo.json",
   ];
   const optionalFiles = [
+    "_story_so_far.md", "_todo.json",
     "_foreshadowing.json", "_voice_profiles.md",
     "_handoff_001.md", "_premise.md",
   ];

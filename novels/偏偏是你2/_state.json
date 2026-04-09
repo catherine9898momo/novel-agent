@@ -1,0 +1,48 @@
+{
+  "novelTitle": "--novel",
+  "style": "ancient-romance",
+  "currentPhase": "writing",
+  "currentChapter": 1,
+  "planningComplete": {
+    "outline": true,
+    "characters": true,
+    "relationships": true,
+    "chapters": true
+  },
+  "decisions": [
+    {
+      "timestamp": "2026-04-09T18:02:25.651Z",
+      "phase": "writing",
+      "topic": "第1章：入京 计划",
+      "choice": "确认"
+    }
+  ],
+  "openQuestions": [],
+  "sessions": [
+    {
+      "startedAt": "2026-04-09T17:52:50.190Z",
+      "phase": "init",
+      "accomplishments": [],
+      "nextSteps": [
+        "框架已生成，等待用户确认后开始写作"
+      ],
+      "endedAt": "2026-04-09T17:57:22.305Z"
+    }
+  ],
+  "currentSession": {
+    "startedAt": "2026-04-09T18:01:11.046Z",
+    "phase": "planning",
+    "accomplishments": [],
+    "nextSteps": []
+  },
+  "stats": {
+    "totalWords": 0,
+    "chaptersCompleted": 0,
+    "chaptersTotal": 20,
+    "averageScore": 0,
+    "totalRewrites": 0,
+    "scores": {}
+  },
+  "chapterProgress": {},
+  "rewriteHistory": []
+}
