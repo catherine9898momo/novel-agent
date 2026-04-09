@@ -72,7 +72,7 @@ const DEFAULT_PROVIDER: ProviderType = (process.env.DEFAULT_PROVIDER as Provider
 const clientCache = new Map<string, Anthropic>();
 const openAIClientCache = new Map<string, OpenAICompatibleClient>();
 
-function getOrCreateClient(apiKey: string, baseURL?: string, provider?: ProviderType): Anthropic | OpenAICompatibleClient {
+function getOrCreateClient(apiKey: string, baseURL?: string, provider?: ProviderType): Anthropic {
   if (provider === "openai-compatible") {
     const cacheKey = `oai::${apiKey}::${baseURL ?? "default"}`;
     let client = openAIClientCache.get(cacheKey);

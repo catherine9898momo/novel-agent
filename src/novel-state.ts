@@ -13,6 +13,8 @@
 
 import fs from "fs/promises";
 import path from "path";
+import type { DimensionScore } from "./agents/reviewer.js";
+import type { RewriteRecord } from "./rewrite-patterns.js";
 
 // ── 类型定义 ──────────────────────────────────────────────
 
@@ -40,13 +42,17 @@ export interface SessionRecord {
   nextSteps: string[];
 }
 
+export type ChapterScore =
+  | number
+  | { overall: number; dimensions: DimensionScore };
+
 export interface WritingStats {
   totalWords: number;
   chaptersCompleted: number;
   chaptersTotal: number;
   averageScore: number;
   totalRewrites: number;
-  scores: Record<number, number>;   // chapterNum -> score
+  scores: Record<number, ChapterScore>;   // chapterNum -> score
 }
 
 export interface ChapterProgress {
@@ -88,6 +94,9 @@ export interface NovelSessionState {
 
   // 章节进度（断点续传）
   chapterProgress: Record<number, ChapterProgress>;
+
+  // 重写历史（模式学习用）
+  rewriteHistory: RewriteRecord[];
 }
 
 // ── 默认状态 ──────────────────────────────────────────────
@@ -117,6 +126,7 @@ function createDefaultState(novelTitle: string, style: string): NovelSessionStat
       scores: {},
     },
     chapterProgress: {},
+    rewriteHistory: [],
   };
 }
 
@@ -301,16 +311,33 @@ export class NovelState {
   async updateStats(update: Partial<WritingStats>): Promise<void> {
     Object.assign(this.state.stats, update);
     // 重算平均分
-    const scores = Object.values(this.state.stats.scores);
+    const scores = Object.values(this.state.stats.scores)
+      .map(s => typeof s === "number" ? s : s.overall);
     if (scores.length > 0) {
       this.state.stats.averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
     }
     await this.save();
   }
 
-  async recordChapterScore(chapterNum: number, score: number): Promise<void> {
-    this.state.stats.scores[chapterNum] = score;
-    const scores = Object.values(this.state.stats.scores);
+  async recordRewrite(
+    chapter: number,
+    attempt: number,
+    fromScore: number,
+    toScore: number,
+    issues: string[],
+    dimensions?: DimensionScore,
+  ): Promise<void> {
+    if (!this.state.rewriteHistory) this.state.rewriteHistory = [];
+    this.state.rewriteHistory.push({ chapter, attempt, fromScore, toScore, dimensions, issues });
+    await this.save();
+  }
+
+  async recordChapterScore(chapterNum: number, score: number, dimensions?: DimensionScore): Promise<void> {
+    this.state.stats.scores[chapterNum] = dimensions
+      ? { overall: score, dimensions }
+      : score;
+    const scores = Object.values(this.state.stats.scores)
+      .map(s => typeof s === "number" ? s : s.overall);
     this.state.stats.averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
     await this.save();
   }
@@ -351,6 +378,34 @@ export class NovelState {
         `  - 重写次数: ${s.stats.totalRewrites}`,
         "",
       );
+
+      // 维度评分简报（仅当有维度数据时显示）
+      const dimEntries = Object.entries(s.stats.scores)
+        .filter((e): e is [string, { overall: number; dimensions: DimensionScore }] =>
+          typeof e[1] === "object")
+        .sort(([a], [b]) => Number(a) - Number(b));
+
+      if (dimEntries.length > 0) {
+        const dimLabels: Record<keyof DimensionScore, string> = {
+          plot_advancement: "情节",
+          character_voice: "声音",
+          prose_quality: "文笔",
+          emotional_arc: "情感",
+          pacing: "节奏",
+        };
+        lines.push("## 章节维度评分");
+        for (const [ch, entry] of dimEntries) {
+          const d = entry.dimensions;
+          const bar = (v: number) => "█".repeat(v) + "░".repeat(5 - v);
+          lines.push(
+            `  - 第${ch}章 (总:${entry.overall}) ` +
+            (Object.keys(dimLabels) as (keyof DimensionScore)[])
+              .map(k => `${dimLabels[k]}${bar(d[k])}`)
+              .join(" "),
+          );
+        }
+        lines.push("");
+      }
     }
 
     // 用户决策

@@ -29,6 +29,9 @@ import type { ChapterMeta } from "../novel-agent.js";
 import type { ChapterPlan } from "../xml-plan.js";
 import { planToXml } from "../xml-plan.js";
 import { extractSkeleton } from "../plan-skeleton.js";
+import { analyzePatterns, generatePreemptiveInstruction, DIM_INSTRUCTIONS } from "../rewrite-patterns.js";
+import type { NovelState } from "../novel-state.js";
+import type { WeakSpot, DimensionScore } from "./reviewer.js";
 
 // ── 写作上下文（精准注入所需的全部信息）──────────────────
 
@@ -67,6 +70,9 @@ export interface WriteContext {
   todoFilepath: string;
   compactOptions: CompactOptions;
   onTool?: (name: string, output: string) => void;
+
+  // 可选：传入状态用于重写模式学习
+  novelState?: NovelState;
 }
 
 // ── 构建写作 system prompt ───────────────────────────────
@@ -161,6 +167,16 @@ export async function runWriterAgent(ctx: WriteContext): Promise<WriteResult> {
   const userPrefs = await loadPreferences();
 
   let system = buildWriterSystem(ctx);
+
+  // 重写模式学习：检测历史低分维度，注入预防性指令
+  if (ctx.novelState) {
+    const patterns = analyzePatterns(ctx.novelState.data.stats.scores);
+    const preemptive = generatePreemptiveInstruction(patterns);
+    if (preemptive) {
+      system = system + "\n\n" + preemptive;
+      console.log(`[模式学习] 检测到 ${patterns.length} 个持续低分维度，已注入预防性指令`);
+    }
+  }
 
   // 知识库和用户偏好注入到风格部分之后
   if (knowledgeMaterial) {
@@ -360,4 +376,240 @@ export async function cleanupForRewrite(novelDir: string, chapterNum: number): P
     await fs.unlink(path.join(novelDir, existing)).catch(() => null);
     console.log(`[重写] 已删除旧版本：${existing}`);
   }
+}
+
+// ── 精准重写（Surgical Rewrite）────────────────────────────
+
+// 去除空白后的字符串，用于匹配比较
+function norm(s: string): string {
+  return s.replace(/\s+/g, "");
+}
+
+// 最长公共子串长度（用于模糊匹配）
+function longestCommonSubstringLength(a: string, b: string): number {
+  // 为性能考虑，限制长度：excerpt 最长 ~50 字，norm 后约 50 字
+  const maxLen = Math.min(a.length, b.length, 200);
+  const s = a.slice(0, maxLen);
+  const t = b.slice(0, maxLen);
+  let best = 0;
+  for (let i = 0; i < s.length; i++) {
+    for (let j = i + 1; j <= s.length; j++) {
+      if (t.includes(s.slice(i, j)) && j - i > best) best = j - i;
+    }
+  }
+  return best;
+}
+
+/**
+ * 在段落列表中找到包含 excerpt 的段落索引。
+ * 策略：1) 精确包含（去空白）2) 模糊：最长公共子串 ≥70% overlap 3) 返回 -1 触发降级
+ */
+export function findParagraph(paragraphs: string[], excerpt: string): number {
+  const normExcerpt = norm(excerpt);
+  if (!normExcerpt) return -1;
+
+  // 1. 精确包含
+  const exact = paragraphs.findIndex(p => norm(p).includes(normExcerpt));
+  if (exact >= 0) return exact;
+
+  // 2. 模糊：最长公共子串 / excerpt 长度 ≥ 0.7
+  let bestIdx = -1;
+  let bestRatio = 0;
+  for (let i = 0; i < paragraphs.length; i++) {
+    const lcs = longestCommonSubstringLength(norm(paragraphs[i]), normExcerpt);
+    const ratio = lcs / normExcerpt.length;
+    if (ratio > bestRatio) {
+      bestRatio = ratio;
+      bestIdx = i;
+    }
+  }
+  return bestRatio >= 0.7 ? bestIdx : -1;
+}
+
+export interface SpotGroup {
+  paragraphIndices: number[];   // 涉及的段落索引（已去重排序）
+  spots: WeakSpot[];            // 组内所有薄弱点
+}
+
+/**
+ * 将 weak_spots 按段落索引聚合，相邻（±1）的段落合并为一组，
+ * 减少对同一区域的重复重写。
+ */
+export function groupWeakSpots(spots: WeakSpot[], paragraphs: string[]): SpotGroup[] {
+  // Map each spot to its paragraph index
+  type IndexedSpot = { idx: number; spot: WeakSpot };
+  const indexed: IndexedSpot[] = [];
+  for (const spot of spots) {
+    const idx = findParagraph(paragraphs, spot.excerpt);
+    if (idx >= 0) indexed.push({ idx, spot });
+  }
+
+  if (indexed.length === 0) return [];
+
+  // Sort by paragraph index
+  indexed.sort((a, b) => a.idx - b.idx);
+
+  // Merge spots within ±1 paragraph distance
+  const groups: SpotGroup[] = [];
+  for (const { idx, spot } of indexed) {
+    const last = groups[groups.length - 1];
+    const lastMax = last ? Math.max(...last.paragraphIndices) : -99;
+    if (last && idx - lastMax <= 1) {
+      if (!last.paragraphIndices.includes(idx)) last.paragraphIndices.push(idx);
+      last.spots.push(spot);
+    } else {
+      groups.push({ paragraphIndices: [idx], spots: [spot] });
+    }
+  }
+  return groups;
+}
+
+export interface IntegrityCheckResult {
+  ok: boolean;
+  reason?: string;
+}
+
+/**
+ * 重建完整性检查：字数变化、无重复段落。
+ */
+export function checkReconstructionIntegrity(
+  original: string,
+  reconstructed: string,
+): IntegrityCheckResult {
+  const origLen = original.replace(/\s/g, "").length;
+  const newLen  = reconstructed.replace(/\s/g, "").length;
+
+  if (newLen < origLen * 0.8) {
+    return { ok: false, reason: `字数骤降：${origLen} → ${newLen}（超过20%）` };
+  }
+  if (newLen > origLen * 1.3) {
+    return { ok: false, reason: `字数骤增：${origLen} → ${newLen}（超过30%）` };
+  }
+
+  // 检测重复段落（完全相同且非空的段落出现 2+ 次）
+  const paras = reconstructed.split(/\n+/).filter(p => p.trim().length > 20);
+  const seen = new Set<string>();
+  for (const p of paras) {
+    const key = norm(p);
+    if (seen.has(key)) {
+      return { ok: false, reason: `检测到重复段落：「${p.slice(0, 30)}...」` };
+    }
+    seen.add(key);
+  }
+
+  return { ok: true };
+}
+
+/**
+ * 精准重写入口：只重写 weak_spots 所在段落，保留其余原文。
+ * 返回重建后的完整章节文本，若任何环节失败则返回 null（触发全章重写）。
+ */
+export async function rewriteSection(
+  ctx: WriteContext,
+  originalContent: string,
+  weakSpots: WeakSpot[],
+  dimensions?: DimensionScore,
+): Promise<string | null> {
+  const paragraphs = originalContent.split(/\n/).filter((_, i, arr) => {
+    // 保留所有行（含空行作为分隔标记），便于精确重建
+    void i; void arr; return true;
+  });
+
+  // 按段落内容分组（跳过空行，对实质段落做匹配）
+  const nonEmpty = paragraphs.map((p, i) => ({ p, i })).filter(x => x.p.trim().length > 0);
+  const contentParagraphs = nonEmpty.map(x => x.p);
+  const contentIndices    = nonEmpty.map(x => x.i); // 在原始 paragraphs 数组中的位置
+
+  const groups = groupWeakSpots(weakSpots, contentParagraphs);
+
+  if (groups.length === 0) {
+    console.log("[精准重写] 无法定位薄弱段落，降级到全章重写");
+    return null;
+  }
+
+  // 构建维度相关指令
+  const dimKeys = dimensions
+    ? (Object.keys(dimensions) as (keyof DimensionScore)[])
+        .filter(k => dimensions[k] < 3)
+    : [];
+  const dimInstructions = dimKeys.map(k => DIM_INSTRUCTIONS[k]).join("\n");
+
+  // 对每个组依次精准重写
+  let workingParagraphs = [...paragraphs];
+
+  for (const group of groups) {
+    // 找到上下文范围：前 2 段 + 目标段落 + 后 1 段（基于 contentParagraphs 索引）
+    const firstContentIdx = group.paragraphIndices[0];
+    const lastContentIdx  = group.paragraphIndices[group.paragraphIndices.length - 1];
+
+    const ctxBefore = contentParagraphs.slice(Math.max(0, firstContentIdx - 2), firstContentIdx);
+    const ctxTarget = contentParagraphs.slice(firstContentIdx, lastContentIdx + 1);
+    const ctxAfter  = contentParagraphs.slice(lastContentIdx + 1, lastContentIdx + 2);
+
+    // 构建 issues + suggestions
+    const issueLines = group.spots
+      .map(s => `- 问题：${s.issue}\n  原文：「${s.excerpt}」\n  建议：${s.suggestion}`)
+      .join("\n");
+
+    const prompt = `你是一位古言言情小说修改编辑。请只重写【需要改写的段落】，保持上下文衔接自然。
+
+## 风格标准
+${ctx.styleGuide}
+${dimInstructions ? `\n## 本次重点改进维度\n${dimInstructions}\n` : ""}
+## 前文（保持衔接，不要改写）
+${ctxBefore.join("\n")}
+
+## 需要改写的段落
+${ctxTarget.join("\n")}
+
+## 后文锚点（改写后必须能自然衔接到此处，不要改写）
+${ctxAfter.join("\n")}
+
+## 薄弱点说明
+${issueLines}
+
+## 要求
+- 只输出改写后的段落内容，不要包含前文和后文
+- 保持与前后文相同的叙述视角和时态
+- 改写后段落数量与原始相近（允许 ±1 段）
+- 不要添加章节标题或分隔符`;
+
+    const response = await endpoints.write.client.messages.create({
+      model: endpoints.write.model,
+      max_tokens: 3000,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const rewritten = response.content
+      .filter((b) => b.type === "text")
+      .map((b) => (b as { type: "text"; text: string }).text)
+      .join("")
+      .trim();
+
+    if (!rewritten) {
+      console.log("[精准重写] LLM 返回空内容，降级到全章重写");
+      return null;
+    }
+
+    // 将重写内容替换回 workingParagraphs（基于原始行索引）
+    const startLine = contentIndices[firstContentIdx];
+    const endLine   = contentIndices[Math.min(lastContentIdx, contentIndices.length - 1)];
+    const rewrittenLines = rewritten.split("\n");
+    workingParagraphs = [
+      ...workingParagraphs.slice(0, startLine),
+      ...rewrittenLines,
+      ...workingParagraphs.slice(endLine + 1),
+    ];
+  }
+
+  const reconstructed = workingParagraphs.join("\n");
+
+  // 完整性检查
+  const integrity = checkReconstructionIntegrity(originalContent, reconstructed);
+  if (!integrity.ok) {
+    console.log(`[精准重写] 完整性检查失败：${integrity.reason}，降级到全章重写`);
+    return null;
+  }
+
+  return reconstructed;
 }

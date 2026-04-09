@@ -14,6 +14,7 @@ import path from "path";
 import { endpoints } from "../models.js";
 import type { ChapterMeta } from "../novel-agent.js";
 import type { ChapterPlan } from "../xml-plan.js";
+import { computeMetrics, flagAnomalies, formatAnomaliesForReviewer } from "../quality-metrics.js";
 
 // ── 章节自评 ──────────────────────────────────────────────
 
@@ -23,8 +24,17 @@ export interface WeakSpot {
   suggestion: string;   // 改进建议
 }
 
+export interface DimensionScore {
+  plot_advancement: number;   // 情节推进 1-5
+  character_voice: number;    // 人物声音 1-5
+  prose_quality: number;      // 文笔质量 1-5
+  emotional_arc: number;      // 情感弧线 1-5
+  pacing: number;             // 节奏把控 1-5
+}
+
 export interface ChapterReview {
   score: number;
+  dimensions?: DimensionScore; // 各维度评分（可选，解析失败不影响流程）
   feedback: string;
   weak_sections: string[];       // 向后兼容
   weak_spots: WeakSpot[];        // 精确标记：需要人工重写的段落
@@ -42,6 +52,14 @@ export async function reviewChapter(
   if (meta.required_scenes?.length) metaLines.push(`必须场景：${meta.required_scenes.join("、")}`);
   if (meta.plot_hooks?.length) metaLines.push(`需埋伏笔：${meta.plot_hooks.join("、")}`);
 
+  // 运行自动质量指标检测（非 LLM，便宜）
+  const metrics = computeMetrics(content);
+  const anomalies = flagAnomalies(metrics);
+  const anomalySection = formatAnomaliesForReviewer(anomalies);
+  if (anomalies.length > 0) {
+    console.log(`[质量检测] 发现 ${anomalies.length} 个指标异常，已注入评审上下文`);
+  }
+
   const response = await endpoints.review.client.messages.create({
     model: endpoints.review.model,
     max_tokens: 1200,
@@ -55,13 +73,20 @@ ${styleGuide}
 ## 本章要求
 ${metaLines.join("\n") || "（无特殊要求）"}
 
-## 本章内容
+${anomalySection}## 本章内容
 ${content}
 
 ## 评审任务
 请严格按以下 JSON 格式输出评审结果，不要有任何额外文字：
 {
-  "score": 评分（1-5整数，4分为及格线）,
+  "score": 总体评分（1-5整数，4分为及格线）,
+  "dimensions": {
+    "plot_advancement": 情节推进评分（1-5整数），
+    "character_voice": 人物声音评分（1-5整数），
+    "prose_quality": 文笔质量评分（1-5整数），
+    "emotional_arc": 情感弧线评分（1-5整数），
+    "pacing": 节奏把控评分（1-5整数）
+  },
   "feedback": "总体评价和主要问题（100字以内）",
   "weak_sections": ["问题点概述1", "问题点概述2"],
   "weak_spots": [
@@ -107,6 +132,13 @@ weak_spots 要求：
       issue: weakSpot.issue,
       suggestion: weakSpot.suggestion,
     }));
+    // 校验 dimensions 字段（若 LLM 没输出则丢弃，不影响后续流程）
+    if (parsed.dimensions) {
+      const d = parsed.dimensions;
+      const valid = [d.plot_advancement, d.character_voice, d.prose_quality, d.emotional_arc, d.pacing]
+        .every(v => typeof v === "number" && v >= 1 && v <= 5);
+      if (!valid) delete parsed.dimensions;
+    }
     return parsed;
   } catch {
     return { score: 3, feedback: "JSON 解析失败", weak_sections: [], weak_spots: [] };

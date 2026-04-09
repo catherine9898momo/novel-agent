@@ -28,7 +28,7 @@ import { printKnowledgeStats, appendPreference, addEntry } from "./knowledge-bas
 
 // Specialized Agents
 import { runPlanAgent, runChapterProposalAgent, type PlanType } from "./agents/planner.js";
-import { runWriterAgent, cleanupForRewrite, generateOpeningVariants, polishChapter, type WriteContext } from "./agents/writer.js";
+import { runWriterAgent, cleanupForRewrite, generateOpeningVariants, polishChapter, rewriteSection, type WriteContext } from "./agents/writer.js";
 import { reviewChapter, verifyAgainstPlan, runCoherenceAudit } from "./agents/reviewer.js";
 import { runAnalysisAgent, extractVoiceProfiles, loadExistingChaptersText, type AnalysisResult } from "./agents/researcher.js";
 import { generateXmlChapterPlan, planToXml, type ChapterPlan } from "./xml-plan.js";
@@ -378,6 +378,7 @@ export class Orchestrator {
         chapterNum, item.task, meta, chapters, detected,
         voiceProfiles, todo, todoFilepath,
       );
+      writeCtx.novelState = this.state;
 
       // ── XML 章节计划（GSD Plan Phase）──
       const chapterPlan = await this.planChapter(
@@ -460,6 +461,7 @@ export class Orchestrator {
   ): Promise<void> {
     const MAX_REWRITES = 3;
     const REVIEW_THRESHOLD = 4;
+    const surgicalEnabled = process.env.SURGICAL_REWRITE === "1";
     let writeAttempt = 0;
     let chapterAccepted = false;
 
@@ -467,6 +469,15 @@ export class Orchestrator {
       writeAttempt++;
       if (writeAttempt > 1) {
         console.log(`\n[重写] 第 ${writeAttempt} 次尝试：${item.task}`);
+        // 第 3 次尝试升级到 opus 端点
+        if (writeAttempt === MAX_REWRITES) {
+          writeCtx.compactOptions = {
+            ...writeCtx.compactOptions,
+            compressClient: endpoints.opus.client,
+            compressModel: endpoints.opus.model,
+          };
+          console.log(`[重写] 升级至 opus 端点重写`);
+        }
         await cleanupForRewrite(this.novelDir, chapterNum);
       }
 
@@ -543,8 +554,12 @@ export class Orchestrator {
         console.log("─".repeat(50));
       }
 
-      // 记录评分
-      await this.state.recordChapterScore(chapterNum, review.score);
+      // 记录评分（含维度）
+      await this.state.recordChapterScore(chapterNum, review.score, review.dimensions);
+      if (review.dimensions) {
+        const d = review.dimensions;
+        console.log(`[自评] 维度 — 情节:${d.plot_advancement} 声音:${d.character_voice} 文笔:${d.prose_quality} 情感:${d.emotional_arc} 节奏:${d.pacing}`);
+      }
 
       if (review.score >= REVIEW_THRESHOLD) {
         console.log(`[自评] 通过（${review.score}分）`);
@@ -592,6 +607,45 @@ export class Orchestrator {
         });
       } else if (writeAttempt < MAX_REWRITES) {
         console.log(`[自评] 不及格（${review.score}分），触发重写...`);
+        await this.state.recordRewrite(
+          chapterNum, writeAttempt, review.score, 0,
+          review.weak_spots.map(s => s.issue),
+          review.dimensions,
+        );
+
+        // 第 1 次不及格：尝试精准重写
+        if (writeAttempt === 1 && surgicalEnabled && review.weak_spots.length > 0 && result.filePath) {
+          console.log(`[精准重写] 尝试局部重写 ${review.weak_spots.length} 个薄弱点...`);
+          const patched = await rewriteSection(
+            writeCtx, result.content, review.weak_spots, review.dimensions,
+          );
+          if (patched) {
+            await fs.writeFile(result.filePath, patched, "utf-8");
+            result.content = patched;
+            console.log(`[精准重写] 完成，重新评审...`);
+            await this.state.updateStats({ totalRewrites: (this.state.data.stats.totalRewrites + 1) });
+            // 重新评审补丁后的版本
+            const patchReview = await reviewChapter(
+              this.novelTitle, item.task, patched, meta, this.styleGuide,
+            );
+            console.log(`[精准重写] 评分：${patchReview.score}/5 — ${patchReview.feedback}`);
+            await this.state.recordChapterScore(chapterNum, patchReview.score, patchReview.dimensions);
+            if (patchReview.score >= REVIEW_THRESHOLD) {
+              console.log(`[精准重写] 通过（${patchReview.score}分）`);
+              chapterAccepted = true;
+              const wc = patched.replace(/\s/g, "").length;
+              await this.state.updateStats({
+                chaptersCompleted: this.state.data.stats.chaptersCompleted + 1,
+                totalWords: this.state.data.stats.totalWords + wc,
+              });
+              continue;
+            }
+            console.log(`[精准重写] 仍不及格，进入全章重写`);
+          } else {
+            console.log(`[精准重写] 降级到全章重写`);
+          }
+        }
+
         writeCtx.meta = {
           ...writeCtx.meta,
           transition_notes: (writeCtx.meta.transition_notes ?? "") +
@@ -618,6 +672,7 @@ export class Orchestrator {
     const chapterTitle = meta.title;
     const MAX_REWRITES = 3;
     const REVIEW_THRESHOLD = 4;
+    const surgicalEnabled = process.env.SURGICAL_REWRITE === "1";
 
     // 获取当前章节进度
     let progress = this.state.getChapterProgress(chapterNum);
@@ -641,6 +696,7 @@ export class Orchestrator {
     const writeCtx = await this.buildWriteContext(
       chapterNum, chapterTitle, meta, chapters, detected, voiceProfiles, todo, todoFilepath
     );
+    writeCtx.novelState = this.state;
 
     // 生成章节计划
     const chapterPlan = await this.planChapter(chapterNum, chapterTitle, meta, writeCtx);
@@ -652,6 +708,15 @@ export class Orchestrator {
       try {
         if (writeAttempt > 1) {
           console.log(`\n[重写] 第 ${writeAttempt} 次尝试：${chapterTitle}`);
+          // 第 3 次尝试升级到 opus 端点
+          if (writeAttempt === MAX_REWRITES) {
+            writeCtx.compactOptions = {
+              ...writeCtx.compactOptions,
+              compressClient: endpoints.opus.client,
+              compressModel: endpoints.opus.model,
+            };
+            console.log(`[重写] 升级至 opus 端点重写`);
+          }
           await cleanupForRewrite(this.novelDir, chapterNum);
         }
 
@@ -705,7 +770,11 @@ export class Orchestrator {
 
         // 更新进度：审阅完成
         await this.state.updateChapterProgress(chapterNum, "reviewed");
-        await this.state.recordChapterScore(chapterNum, review.score);
+        await this.state.recordChapterScore(chapterNum, review.score, review.dimensions);
+        if (review.dimensions) {
+          const d = review.dimensions;
+          console.log(`[自评] 维度 — 情节:${d.plot_advancement} 声音:${d.character_voice} 文笔:${d.prose_quality} 情感:${d.emotional_arc} 节奏:${d.pacing}`);
+        }
 
         if (review.score >= REVIEW_THRESHOLD) {
           chapterAccepted = true;
@@ -714,6 +783,41 @@ export class Orchestrator {
         } else {
           const rewriteChoice = await askLine(`评分较低（${review.score}/5），是否重写？(y/n) `);
           if (rewriteChoice.toLowerCase() === "y") {
+            await this.state.recordRewrite(
+              chapterNum, writeAttempt, review.score, 0,
+              review.weak_spots.map(s => s.issue),
+              review.dimensions,
+            );
+
+            // 第 1 次不及格：尝试精准重写
+            if (writeAttempt === 1 && surgicalEnabled && review.weak_spots.length > 0 && result.filePath) {
+              console.log(`[精准重写] 尝试局部重写 ${review.weak_spots.length} 个薄弱点...`);
+              const patched = await rewriteSection(
+                writeCtx, result.content, review.weak_spots, review.dimensions,
+              );
+              if (patched) {
+                await fs.writeFile(result.filePath, patched, "utf-8");
+                result.content = patched;
+                console.log(`[精准重写] 完成，重新评审...`);
+                await this.state.updateStats({ totalRewrites: (this.state.data.stats.totalRewrites + 1) });
+                const patchReview = await reviewChapter(
+                  this.novelTitle, chapterTitle, patched, meta, this.styleGuide,
+                );
+                console.log(`[精准重写] 评分：${patchReview.score}/5 — ${patchReview.feedback}`);
+                await this.state.recordChapterScore(chapterNum, patchReview.score, patchReview.dimensions);
+                if (patchReview.score >= REVIEW_THRESHOLD) {
+                  console.log(`[精准重写] 通过（${patchReview.score}分）`);
+                  chapterAccepted = true;
+                  await this.state.updateChapterProgress(chapterNum, "complete");
+                  await this.state.recordChapterAttempt(chapterNum);
+                  continue;
+                }
+                console.log(`[精准重写] 仍不及格，进入全章重写`);
+              } else {
+                console.log(`[精准重写] 降级到全章重写`);
+              }
+            }
+
             await this.state.recordChapterAttempt(chapterNum);
             continue;
           } else {
@@ -766,7 +870,7 @@ export class Orchestrator {
     const review = await reviewChapter(this.novelTitle, meta.title, content, meta, this.styleGuide);
     console.log(`[审阅] 评分：${review.score}/5 — ${review.feedback}`);
 
-    await this.state.recordChapterScore(chapterNum, review.score);
+    await this.state.recordChapterScore(chapterNum, review.score, review.dimensions);
     await this.state.updateChapterProgress(chapterNum, "reviewed");
 
     const answer = await askLine("是否接受当前版本？(y/n) ");
