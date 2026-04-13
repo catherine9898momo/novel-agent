@@ -13,7 +13,7 @@
  *   LLM 生成自由文本计划 → 解析为 ChapterPlan 结构 → 输出 XML 注入写作 prompt
  */
 
-import type { ChapterMeta } from "./novel-agent.js";
+import type { ChapterMeta } from "./types.js";
 import { endpoints } from "./models.js";
 
 // ── 类型定义 ──────────────────────────────────────────────
@@ -253,12 +253,12 @@ function createFallbackPlan(meta: ChapterMeta, chapterTitle: string): ChapterPla
     pov: "主角",
     setting: "待定",
     emotionalArc: { from: meta.mood ?? "平静", to: meta.mood ?? "波动" },
-    scenes: (meta.required_scenes ?? ["主场景"]).map((s, i) => ({
+    scenes: (meta.required_scenes ?? ["主场景"]).map((s: string, i: number) => ({
       order: i + 1,
       description: s,
       emotion: meta.mood ?? "待定",
     })),
-    foreshadowing: (meta.plot_hooks ?? []).map((h) => ({
+    foreshadowing: (meta.plot_hooks ?? []).map((h: string) => ({
       type: "plant" as const,
       desc: h,
     })),

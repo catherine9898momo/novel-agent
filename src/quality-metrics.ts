@@ -11,6 +11,8 @@
  *   - paragraphLengthCV   段落长度变异系数（低 = 结构单调）
  *   - exclamationDensity  感叹号密度（每百字感叹号数）
  *   - adverbDensity       副词密度（"地"字结构，每百字出现次数）
+ *   - tabooPhraseDensity  模板化禁忌词密度（每百字出现次数）
+ *   - explicitThoughtDensity  直白心理描写密度（每百字出现次数）
  */
 
 // ── 类型定义 ──────────────────────────────────────────────
@@ -23,6 +25,8 @@ export interface QualityMetrics {
   paragraphLengthCV: number;     // 段落长度变异系数
   exclamationDensity: number;    // 每百字感叹号数
   adverbDensity: number;         // 每百字"地"字副词修饰数
+  tabooPhraseDensity: number;    // 每百字模板化禁忌词出现次数
+  explicitThoughtDensity: number;// 每百字直白心理描写出现次数
 }
 
 export interface MetricAnomaly {
@@ -143,6 +147,46 @@ function computeAdverbDensity(text: string): number {
   return Math.round((count / total) * 100 * 100) / 100;
 }
 
+/**
+ * 模板化禁忌词密度（每百字）
+ */
+function computeTabooPhraseDensity(text: string): number {
+  const total = text.replace(/\s/g, "").length;
+  if (total === 0) return 0;
+  const tabooPatterns = [
+    /温润如玉/g,
+    /月色如水/g,
+    /美若天仙/g,
+    /倾国倾城/g,
+  ];
+  let count = 0;
+  for (const p of tabooPatterns) {
+    count += (text.match(p) ?? []).length;
+  }
+  return Math.round((count / total) * 100 * 100) / 100;
+}
+
+/**
+ * 直白心理描写密度（每百字）
+ */
+function computeExplicitThoughtDensity(text: string): number {
+  const total = text.replace(/\s/g, "").length;
+  if (total === 0) return 0;
+  const thoughtPatterns = [
+    /她心想/g,
+    /他心想/g,
+    /她想道/g,
+    /他想道/g,
+    /她觉得/g,
+    /他觉得/g,
+  ];
+  let count = 0;
+  for (const p of thoughtPatterns) {
+    count += (text.match(p) ?? []).length;
+  }
+  return Math.round((count / total) * 100 * 100) / 100;
+}
+
 // ── 主入口 ────────────────────────────────────────────────
 
 export function computeMetrics(chapter: string): QualityMetrics {
@@ -155,6 +199,8 @@ export function computeMetrics(chapter: string): QualityMetrics {
     paragraphLengthCV:  computeParagraphLengthCV(chapter),
     exclamationDensity: computeExclamationDensity(chapter),
     adverbDensity:      computeAdverbDensity(chapter),
+    tabooPhraseDensity: computeTabooPhraseDensity(chapter),
+    explicitThoughtDensity: computeExplicitThoughtDensity(chapter),
   };
 }
 
@@ -216,6 +262,22 @@ export function flagAnomalies(metrics: QualityMetrics): MetricAnomaly[] {
       metric: "adverbDensity",
       value: metrics.adverbDensity,
       message: `副词（"XX地"）密度偏高（每百字 ${metrics.adverbDensity} 个），建议改用动作和细节替代`,
+    });
+  }
+
+  if (metrics.tabooPhraseDensity > 0.05) {
+    anomalies.push({
+      metric: "tabooPhraseDensity",
+      value: metrics.tabooPhraseDensity,
+      message: `模板化禁忌词密度偏高（每百字 ${metrics.tabooPhraseDensity} 个），建议替换为具体细节描写`,
+    });
+  }
+
+  if (metrics.explicitThoughtDensity > 0.12) {
+    anomalies.push({
+      metric: "explicitThoughtDensity",
+      value: metrics.explicitThoughtDensity,
+      message: `直白心理描写密度偏高（每百字 ${metrics.explicitThoughtDensity} 个），建议减少“她心想/他觉得”式写法`,
     });
   }
 

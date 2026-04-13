@@ -14,7 +14,15 @@
 import fs from "fs/promises";
 import path from "path";
 import type { DimensionScore } from "./agents/reviewer.js";
-import type { RewriteRecord } from "./rewrite-patterns.js";
+// RewriteRecord inlined (was in rewrite-patterns.ts)
+export interface RewriteRecord {
+  chapter: number;
+  attempt: number;
+  fromScore: number;
+  toScore: number;
+  dimensions?: import("./agents/reviewer.js").DimensionScore;
+  issues: string[];
+}
 
 // ── 类型定义 ──────────────────────────────────────────────
 
@@ -392,6 +400,7 @@ export class NovelState {
           prose_quality: "文笔",
           emotional_arc: "情感",
           pacing: "节奏",
+          dialogue_quality: "对话",
         };
         lines.push("## 章节维度评分");
         for (const [ch, entry] of dimEntries) {

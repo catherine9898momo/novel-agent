@@ -28,12 +28,6 @@ import { OpenAICompatibleClient } from "./providers/openai-compatible.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-// ── VERIFY_MODE: Mock API 注入 ──────────────────────────
-// 验证模式下，runner.ts 在 import 本模块前将 mock factory 注册到 globalThis
-// 这样 buildEndpoint() 在模块初始化时就能读到 mock 工厂，无需 top-level await
-const _mockFactory = (globalThis as Record<string, unknown>).__VERIFY_MOCK_CLIENT_FACTORY__ as
-  ((role: string) => { messages: unknown; baseURL: string }) | undefined;
-
 // ── Provider 类型 ────────────────────────────────────────
 
 export type ProviderType = "anthropic" | "deepseek-web" | "openai-compatible";
@@ -103,15 +97,6 @@ function getOrCreateClient(apiKey: string, baseURL?: string, provider?: Provider
  * 未配置的字段回退到默认值
  */
 function buildEndpoint(role: string): ModelEndpoint {
-  // VERIFY_MODE: 返回 Mock 客户端
-  if (_mockFactory) {
-    return {
-      client: _mockFactory(role.toLowerCase()) as unknown as Anthropic,
-      model: `mock-${role.toLowerCase()}`,
-      provider: "anthropic",
-    };
-  }
-
   const provider = (process.env[`${role}_PROVIDER`] as ProviderType) ?? DEFAULT_PROVIDER;
   
   // DeepSeek Web 特殊处理

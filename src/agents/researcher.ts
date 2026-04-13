@@ -14,7 +14,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { endpoints } from "../models.js";
-import type { ChapterMeta, NovelState as DetectedState } from "../novel-agent.js";
+import type { ChapterMeta, NovelState as DetectedState } from "../types.js";
 
 // ── 全文分析（重建故事状态）──────────────────────────────
 

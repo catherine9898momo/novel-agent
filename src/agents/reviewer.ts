@@ -12,7 +12,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { endpoints } from "../models.js";
-import type { ChapterMeta } from "../novel-agent.js";
+import type { ChapterMeta } from "../types.js";
 import type { ChapterPlan } from "../xml-plan.js";
 import { computeMetrics, flagAnomalies, formatAnomaliesForReviewer } from "../quality-metrics.js";
 
@@ -30,6 +30,7 @@ export interface DimensionScore {
   prose_quality: number;      // 文笔质量 1-5
   emotional_arc: number;      // 情感弧线 1-5
   pacing: number;             // 节奏把控 1-5
+  dialogue_quality: number;   // 对话质量 1-5
 }
 
 export interface ChapterReview {
@@ -85,7 +86,8 @@ ${content}
     "character_voice": 人物声音评分（1-5整数），
     "prose_quality": 文笔质量评分（1-5整数），
     "emotional_arc": 情感弧线评分（1-5整数），
-    "pacing": 节奏把控评分（1-5整数）
+    "pacing": 节奏把控评分（1-5整数），
+    "dialogue_quality": 对话质量评分（1-5整数）
   },
   "feedback": "总体评价和主要问题（100字以内）",
   "weak_sections": ["问题点概述1", "问题点概述2"],
@@ -112,7 +114,8 @@ weak_spots 要求：
 2. 对话是否在"做事"（推进关系/暴露性格），还是在说废话？
 3. 情感表达是通过细节和行为，还是直接宣泄？
 4. 场景过渡是否自然，有无硬切？
-5. 字数是否达标？`,
+5. 字数是否达标？
+6. 角色对话语气是否可区分，不看人名能否识别说话者？`,
     }],
   });
 
@@ -135,7 +138,7 @@ weak_spots 要求：
     // 校验 dimensions 字段（若 LLM 没输出则丢弃，不影响后续流程）
     if (parsed.dimensions) {
       const d = parsed.dimensions;
-      const valid = [d.plot_advancement, d.character_voice, d.prose_quality, d.emotional_arc, d.pacing]
+      const valid = [d.plot_advancement, d.character_voice, d.prose_quality, d.emotional_arc, d.pacing, d.dialogue_quality]
         .every(v => typeof v === "number" && v >= 1 && v <= 5);
       if (!valid) delete parsed.dimensions;
     }
