@@ -1,0 +1,31 @@
+{
+  "novelTitle": "权臣宠爱-不管是前朝还是今朝，你永远我的贵妃/",
+  "style": "ancient-romance",
+  "currentPhase": "init",
+  "currentChapter": null,
+  "planningComplete": {
+    "outline": false,
+    "characters": false,
+    "relationships": false,
+    "chapters": false
+  },
+  "decisions": [],
+  "openQuestions": [],
+  "sessions": [],
+  "currentSession": {
+    "startedAt": "2026-04-12T09:00:43.341Z",
+    "phase": "init",
+    "accomplishments": [],
+    "nextSteps": []
+  },
+  "stats": {
+    "totalWords": 0,
+    "chaptersCompleted": 0,
+    "chaptersTotal": 0,
+    "averageScore": 0,
+    "totalRewrites": 0,
+    "scores": {}
+  },
+  "chapterProgress": {},
+  "rewriteHistory": []
+}
