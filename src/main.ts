@@ -17,6 +17,9 @@ import { computeMetrics, flagAnomalies } from "./quality-metrics.js";
 import { endpoints, printModelConfig } from "./models.js";
 import type { ChapterMeta } from "./types.js";
 import { loadChapters } from "./types.js";
+import { formatContextProfile, profileNovelContext } from "./context-profiler.js";
+import { generateChapterBriefDraft, loadChapterBrief, saveChapterBrief } from "./chapter-brief.js";
+import { NovelState } from "./novel-state.js";
 
 const NOVELS_DIR = path.resolve("novels");
 
@@ -182,6 +185,71 @@ async function cmdAudit(novelName: string) {
   await runCoherenceAudit(novelName, novelDir, styleGuide, chapterFiles.length);
 }
 
+// ── context: LLM 调用前的上下文规模预检 ─────────────────────
+
+async function cmdContext(novelName: string) {
+  const novelDir = await resolveNovelDir(novelName);
+  const styleGuide = await loadStyle("ancient-romance");
+  const profile = await profileNovelContext(novelName, novelDir, styleGuide);
+  console.log(formatContextProfile(profile));
+}
+
+// ── plan: 生成章节 Brief（pending -> planned）────────────────
+
+async function cmdPlan(novelName: string, chapterArg: string) {
+  const novelDir = await resolveNovelDir(novelName);
+  const chapterNum = parseChapterNum(chapterArg);
+  if (!Number.isFinite(chapterNum) || chapterNum <= 0) {
+    console.log("章节号必须是正整数");
+    return;
+  }
+
+  const existingBrief = await loadChapterBrief(novelDir, chapterNum);
+  if (existingBrief) {
+    console.log(`\n── 已存在 Chapter Brief: 第 ${chapterNum} 章 ──────────────────────`);
+    console.log(`标题: ${existingBrief.title}`);
+    console.log(`目的: ${existingBrief.purpose}`);
+    console.log(`路径: novels/${novelName}/_briefs/${String(chapterNum).padStart(3, "0")}.json`);
+    return;
+  }
+
+  const chapters = await loadChapters(novelDir);
+  const meta = chapters?.[chapterNum - 1];
+  if (!meta) {
+    console.log(`未找到第 ${chapterNum} 章的章节元数据，请先检查 _chapters.json`);
+    return;
+  }
+
+  const storySoFar = await fs.readFile(path.join(novelDir, "_story_so_far.md"), "utf-8").catch(() => "");
+  const chapterFiles = await listChapterFiles(novelDir);
+  const previousPrefix = String(chapterNum - 1).padStart(3, "0");
+  const previousFile = chapterFiles.find((file) => file.startsWith(previousPrefix));
+  const previousChapterExcerpt = previousFile
+    ? await fs.readFile(path.join(novelDir, previousFile), "utf-8").catch(() => "")
+    : undefined;
+
+  const brief = await generateChapterBriefDraft({
+    novelName,
+    chapterNum,
+    novelDir,
+    meta,
+    storySoFar,
+    previousChapterTitle: previousFile,
+    previousChapterExcerpt,
+  });
+  const briefPath = await saveChapterBrief(novelDir, brief);
+
+  const state = await NovelState.load(novelDir, novelName, "ancient-romance");
+  await state.setCurrentChapter(chapterNum);
+  await state.updateChapterProgress(chapterNum, "planned", briefPath);
+
+  console.log(`\n✓ 已生成 Chapter Brief: 第 ${chapterNum} 章`);
+  console.log(`标题: ${brief.title}`);
+  console.log(`状态: planned`);
+  console.log(`路径: novels/${novelName}/_briefs/${String(chapterNum).padStart(3, "0")}.json`);
+  console.log("\n下一步：打开 brief，把 TODO 补成真实章节概览。");
+}
+
 // ── 入口 ────────────────────────────────────────────────
 
 const [cmd, ...args] = process.argv.slice(2);
@@ -190,6 +258,8 @@ const USAGE = `
 用法:
   npm run metrics <小说名> [章节号]    质量指标检测
   npm run review  <小说名> <章节号>    AI 审阅单章
+  npm run context <小说名>             上下文规模预检
+  npm run plan    <小说名> <章节号>    生成章节 Brief
   npm run analyze <小说名>             AI 全文状态分析
   npm run audit   <小说名>             AI 跨章连贯性审计
 `;
@@ -203,6 +273,14 @@ async function run() {
     case "review":
       if (!args[0] || !args[1]) { console.log(USAGE); return; }
       await cmdReview(args[0], args[1]);
+      break;
+    case "context":
+      if (!args[0]) { console.log(USAGE); return; }
+      await cmdContext(args[0]);
+      break;
+    case "plan":
+      if (!args[0] || !args[1]) { console.log(USAGE); return; }
+      await cmdPlan(args[0], args[1]);
       break;
     case "analyze":
       if (!args[0]) { console.log(USAGE); return; }

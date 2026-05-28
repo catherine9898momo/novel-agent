@@ -1,0 +1,33 @@
+{
+  "novelTitle": "烟雨长安",
+  "style": "ancient-romance",
+  "currentPhase": "init",
+  "currentChapter": 6,
+  "planningComplete": {
+    "outline": false,
+    "characters": false,
+    "relationships": false,
+    "chapters": false
+  },
+  "decisions": [],
+  "openQuestions": [],
+  "sessions": [],
+  "currentSession": null,
+  "stats": {
+    "totalWords": 0,
+    "chaptersCompleted": 0,
+    "chaptersTotal": 0,
+    "averageScore": 0,
+    "totalRewrites": 0,
+    "scores": {}
+  },
+  "chapterProgress": {
+    "6": {
+      "chapterNum": 6,
+      "status": "planned",
+      "attempts": 0,
+      "lastCheckpoint": "/Users/catherine/ai/novel-agent/novels/烟雨长安/_briefs/006.json"
+    }
+  },
+  "rewriteHistory": []
+}

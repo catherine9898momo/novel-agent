@@ -65,7 +65,17 @@ export interface WritingStats {
 
 export interface ChapterProgress {
   chapterNum: number;
-  status: "pending" | "summary_done" | "draft_done" | "reviewed" | "complete";
+  status:
+    | "pending"
+    | "planned"
+    | "drafted"
+    | "reviewed"
+    | "revised"
+    | "accepted"
+    // Legacy statuses kept for existing state files/tests during migration.
+    | "summary_done"
+    | "draft_done"
+    | "complete";
   summaryPath?: string;
   draftPath?: string;
   lastCheckpoint?: string;  // checkpoint 文件路径

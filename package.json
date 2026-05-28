@@ -6,6 +6,8 @@
   "scripts": {
     "metrics": "tsx src/main.ts metrics",
     "review": "tsx src/main.ts review",
+    "context": "tsx src/main.ts context",
+    "plan": "tsx src/main.ts plan",
     "analyze": "tsx src/main.ts analyze",
     "audit": "tsx src/main.ts audit",
     "test": "vitest run",
