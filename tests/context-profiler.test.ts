@@ -6,15 +6,15 @@ import { describe, expect, it } from "vitest";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { estimateTokens, profileNovelContext } from "../src/context-profiler.js";
+import { estimateInputTokens, profileNovelContext } from "../src/context-profiler.js";
 
-describe("estimateTokens", () => {
+describe("estimateInputTokens", () => {
   it("中文字符按接近 1 token 估算", () => {
-    expect(estimateTokens("烟雨长安")).toBe(4);
+    expect(estimateInputTokens("烟雨长安")).toBe(4);
   });
 
   it("英文按约 4 chars/token 估算", () => {
-    expect(estimateTokens("abcdefgh")).toBe(2);
+    expect(estimateInputTokens("abcdefgh")).toBe(2);
   });
 });
 
