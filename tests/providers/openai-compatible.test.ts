@@ -15,6 +15,9 @@ function makeClient(): OpenAICompatibleClient {
 }
 
 describe("OpenAI Compatible Provider", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
   describe("OpenAICompatibleClient 构造", () => {
     it("正确初始化并标准化 baseURL", () => {
       const c1 = new OpenAICompatibleClient({ apiKey: "k", baseURL: "https://api.example.com/" });
@@ -25,6 +28,25 @@ describe("OpenAI Compatible Provider", () => {
 
       const c3 = new OpenAICompatibleClient({ apiKey: "k", baseURL: "https://api.example.com/v1/" });
       expect(c3.baseURL).toBe("https://api.example.com");
+    });
+
+    it("DeepSeek 官方 OpenAI baseURL 使用 /chat/completions 路径", async () => {
+      const client = new OpenAICompatibleClient({ apiKey: "k", baseURL: "https://api.deepseek.com" });
+
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "chatcmpl-123",
+          choices: [{ index: 0, message: { role: "assistant", content: "OK" }, finish_reason: "stop" }],
+        }),
+      } as Response);
+
+      await client.messages.create({
+        model: "deepseek-v4-pro",
+        messages: [{ role: "user", content: "Hi" }],
+      });
+
+      expect((fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe("https://api.deepseek.com/chat/completions");
     });
 
     it("暴露 messages 对象", () => {

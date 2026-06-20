@@ -116,6 +116,7 @@ interface AnthropicCreateParams {
   messages: AnthropicMessageParam[];
   tools?: AnthropicToolParam[];
   max_tokens?: number;
+  response_format?: { type: "json_object" };
 }
 
 // ── 格式转换 ─────────────────────────────────────────────
@@ -149,7 +150,7 @@ function convertMessages(messages: AnthropicMessageParam[], system?: string): Op
     }
 
     if (msg.role === "assistant") {
-      const assistantMsg: OpenAIMessage = { role: "assistant", content: textParts.join("") || null };
+      const assistantMsg: OpenAIMessage = { role: "assistant", content: textParts.join("") };
       if (toolUseParts.length > 0) {
         assistantMsg.tool_calls = toolUseParts.map(t => ({
           id: t.id,
@@ -229,11 +230,13 @@ export class OpenAICompatibleClient {
   public readonly messages: OpenAICompatibleMessages;
   public readonly baseURL: string;
   private readonly apiKey: string;
+  private readonly completionsPath: string;
 
   constructor(config: { apiKey: string; baseURL: string }) {
     this.apiKey = config.apiKey;
     // 标准化 baseURL：去掉尾部斜杠和 /v1 后缀
     this.baseURL = config.baseURL.replace(/\/+$/, "").replace(/\/v1$/, "");
+    this.completionsPath = this.baseURL.includes("api.deepseek.com") ? "/chat/completions" : "/v1/chat/completions";
     this.messages = new OpenAICompatibleMessages(this);
   }
 
@@ -242,7 +245,7 @@ export class OpenAICompatibleClient {
   }
 
   async request(body: Record<string, unknown>, signal?: AbortSignal): Promise<Response> {
-    const url = `${this.baseURL}/v1/chat/completions`;
+    const url = `${this.baseURL}${this.completionsPath}`;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${this.apiKey}`,
@@ -282,6 +285,7 @@ class OpenAICompatibleMessages {
 
     const tools = convertTools(params.tools);
     if (tools) body.tools = tools;
+    if (params.response_format) body.response_format = params.response_format;
 
     const response = await this.client.request(body);
     const data = await response.json() as OpenAIResponse;
@@ -323,6 +327,7 @@ class OpenAICompatibleStream {
 
     const tools = convertTools(this.params.tools);
     if (tools) body.tools = tools;
+    if (this.params.response_format) body.response_format = this.params.response_format;
 
     const response = await this.client.request(body, this.params.signal);
 

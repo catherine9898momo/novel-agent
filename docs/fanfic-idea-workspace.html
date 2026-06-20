@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>同人短篇工作台 - Phase 0 静态设计稿</title>
+  <style>
+    :root {
+      --sage: #8B9D83;
+      --moss: #606C38;
+      --clay: #B08B6E;
+      --terracotta: #C66B3D;
+      --ochre: #C08E3A;
+      --oat: #D4B895;
+      --ink: #27231F;
+      --muted: #6F655D;
+      --line: rgba(39, 35, 31, 0.16);
+      --surface: #E8DCC7;
+      --panel: rgba(255, 252, 245, 0.72);
+      --panel-strong: rgba(255, 252, 245, 0.9);
+      --ok: #606C38;
+      --warn: #C08E3A;
+      --bad: #B9503A;
+      --shadow: 0 18px 50px rgba(39, 35, 31, 0.14);
+      --radius: 20px;
+      --fast: 180ms ease;
+      font-family: "Georgia", "Times New Roman", "Noto Serif SC", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 8%, rgba(198, 107, 61, 0.24), transparent 24rem),
+        radial-gradient(circle at 82% 14%, rgba(139, 157, 131, 0.32), transparent 26rem),
+        linear-gradient(135deg, #D4B895 0%, #E8DCC7 48%, #8B9D83 130%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      background-image:
+        linear-gradient(45deg, rgba(39, 35, 31, 0.05) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(39, 35, 31, 0.04) 25%, transparent 25%);
+      background-size: 22px 22px;
+      mix-blend-mode: multiply;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid rgba(39, 35, 31, 0.18);
+      border-radius: 999px;
+      padding: 10px 15px;
+      background: var(--panel-strong);
+      color: var(--ink);
+      cursor: pointer;
+      transition: transform var(--fast), background var(--fast), border-color var(--fast);
+      min-height: 42px;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(39, 35, 31, 0.36);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+    }
+
+    button.is-loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.82;
+    }
+
+    button.is-loading::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      animation: spin 760ms linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .primary {
+      background: var(--moss);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .danger {
+      background: rgba(185, 80, 58, 0.14);
+      color: #6f2d21;
+      border-color: rgba(185, 80, 58, 0.22);
+    }
+
+    .quiet {
+      background: transparent;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: min(1720px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 22px 0 28px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: rgba(255, 252, 245, 0.54);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--moss);
+      font: 700 12px/1.2 system-ui, sans-serif;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: clamp(28px, 4vw, 54px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .summary {
+      max-width: 840px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font: 15px/1.6 system-ui, sans-serif;
+    }
+
+    .status-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 280px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(39, 35, 31, 0.16);
+      background: rgba(255, 252, 245, 0.64);
+      color: var(--ink);
+      font: 700 12px/1 system-ui, sans-serif;
+      white-space: nowrap;
+    }
+
+    .pill.ok {
+      background: rgba(96, 108, 56, 0.14);
+      color: var(--ok);
+    }
+
+    .pill.warn {
+      background: rgba(192, 142, 58, 0.18);
+      color: #75541f;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(300px, 0.92fr) minmax(420px, 1.3fr) minmax(320px, 0.9fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid rgba(39, 35, 31, 0.12);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.2;
+    }
+
+    .panel-subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font: 13px/1.5 system-ui, sans-serif;
+    }
+
+    .panel-body {
+      padding: 16px 18px 18px;
+    }
+
+    .idea-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .idea-panel .panel-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .idea-input {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .idea-panel label {
+      flex: 1;
+      min-height: 0;
+      grid-template-rows: auto 1fr;
+    }
+
+    .idea-panel textarea {
+      height: 100%;
+      min-height: 520px;
+    }
+
+    textarea,
+    input,
+    select {
+      width: 100%;
+      border: 1px solid rgba(39, 35, 31, 0.16);
+      border-radius: 16px;
+      background: rgba(255, 252, 245, 0.78);
+      color: var(--ink);
+      outline: none;
+    }
+
+    textarea:focus,
+    input:focus,
+    select:focus {
+      border-color: rgba(96, 108, 56, 0.52);
+      box-shadow: 0 0 0 3px rgba(96, 108, 56, 0.12);
+    }
+
+    textarea {
+      min-height: 240px;
+      resize: vertical;
+      padding: 13px 14px;
+      font: 15px/1.7 system-ui, sans-serif;
+    }
+
+    input,
+    select {
+      min-height: 40px;
+      padding: 9px 11px;
+      font: 14px/1.2 system-ui, sans-serif;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font: 700 12px/1.2 system-ui, sans-serif;
+    }
+
+    label span {
+      color: var(--muted);
+    }
+
+    .field-label-row,
+    .constraint-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .story-card-edit-btn {
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font: 700 11px/1 system-ui, sans-serif;
+      background: rgba(96, 108, 56, 0.1);
+      color: var(--moss);
+    }
+
+    .story-card-edit-btn:disabled {
+      display: none;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field-wide {
+      grid-column: 1 / -1;
+    }
+
+    .tag-box {
+      min-height: 86px;
+      padding: 9px;
+      border: 1px solid rgba(39, 35, 31, 0.16);
+      border-radius: 16px;
+      background: rgba(255, 252, 245, 0.72);
+      font: 14px/1.5 system-ui, sans-serif;
+    }
+
+    .card-loading input,
+    .card-loading select,
+    .card-loading .tag-box,
+    .card-loading ul {
+      opacity: 0.72;
+    }
+
+    .loading-pill {
+      background: rgba(192, 142, 58, 0.18);
+      color: #75541f;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(139, 157, 131, 0.16);
+      color: #39411f;
+      border: 1px solid rgba(96, 108, 56, 0.16);
+      font: 700 12px/1.2 system-ui, sans-serif;
+    }
+
+    .tag.clay {
+      background: rgba(198, 107, 61, 0.14);
+      color: #723820;
+      border-color: rgba(198, 107, 61, 0.18);
+    }
+
+    .constraint-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .constraint {
+      min-height: 116px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(39, 35, 31, 0.14);
+      background: rgba(255, 252, 245, 0.55);
+    }
+
+    .constraint h3 {
+      margin-bottom: 8px;
+      font: 700 13px/1.2 system-ui, sans-serif;
+    }
+
+    .constraint ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font: 13px/1.55 system-ui, sans-serif;
+    }
+
+    .flow-panel {
+      grid-column: 1 / -1;
+      order: -1;
+    }
+
+    #ideaPanel,
+    #storyCardPanel,
+    #outputPanel {
+      grid-column: 1 / -1;
+    }
+
+    .stage-hidden {
+      display: none !important;
+    }
+
+    .workflow-list {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(124px, 1fr));
+      gap: 20px;
+      position: relative;
+      padding: 8px 0 4px;
+    }
+
+    .step {
+      position: relative;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 10px;
+      border-radius: 16px;
+      background: rgba(255, 252, 245, 0.56);
+      border: 1px solid rgba(39, 35, 31, 0.12);
+      color: var(--ink);
+      text-align: left;
+      opacity: 0.54;
+      cursor: not-allowed;
+    }
+
+    .step::before {
+      content: "";
+      position: absolute;
+      left: -21px;
+      top: 50%;
+      width: 20px;
+      height: 2px;
+      transform: translateY(-50%);
+      background: rgba(39, 35, 31, 0.16);
+      pointer-events: none;
+    }
+
+    .step:first-child::before {
+      display: none;
+    }
+
+    .step.done::before,
+    .step.current::before,
+    .step.viewing::before {
+      background: rgba(96, 108, 56, 0.64);
+    }
+
+    .step:not(:disabled) {
+      cursor: pointer;
+    }
+
+    .step.done,
+    .step.current {
+      opacity: 1;
+    }
+
+    .step.viewing {
+      outline: 3px solid rgba(96, 108, 56, 0.16);
+      border-color: rgba(96, 108, 56, 0.38);
+      background: rgba(96, 108, 56, 0.08);
+    }
+
+    .step-index {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(39, 35, 31, 0.08);
+      font: 700 13px/1 system-ui, sans-serif;
+    }
+
+    .step.done .step-index {
+      background: var(--moss);
+      color: #fff;
+    }
+
+    .step.current {
+      border-color: rgba(198, 107, 61, 0.48);
+      background: rgba(198, 107, 61, 0.1);
+    }
+
+    .step.current .step-index {
+      background: rgba(198, 107, 61, 0.18);
+      color: #7a4323;
+    }
+
+    .step-name {
+      margin: 0;
+      font: 700 13px/1.2 system-ui, sans-serif;
+    }
+
+    .step-note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font: 12px/1.4 system-ui, sans-serif;
+    }
+
+    .step-state {
+      display: block;
+      margin-top: 5px;
+      color: var(--moss);
+      font: 700 11px/1.2 system-ui, sans-serif;
+    }
+
+    .gate {
+      margin-top: 26px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(192, 142, 58, 0.28);
+      background: rgba(192, 142, 58, 0.12);
+    }
+
+    .gate h3 {
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+
+    .gate p {
+      margin-bottom: 12px;
+      color: var(--muted);
+      font: 13px/1.5 system-ui, sans-serif;
+    }
+
+    .tabs-panel {
+      grid-column: 1 / -1;
+    }
+
+    .tabs {
+      display: none;
+      gap: 6px;
+      padding: 10px;
+      border-bottom: 1px solid rgba(39, 35, 31, 0.12);
+      overflow-x: auto;
+    }
+
+    .tab {
+      border-radius: 999px;
+      min-height: 36px;
+      padding: 8px 13px;
+      background: transparent;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--moss);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 18px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .document {
+      min-height: 280px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(39, 35, 31, 0.12);
+      background: rgba(255, 252, 245, 0.7);
+      font: 15px/1.75 "Georgia", "Times New Roman", "Noto Serif SC", serif;
+      white-space: pre-wrap;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 9px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255, 252, 245, 0.58);
+      border: 1px solid rgba(39, 35, 31, 0.12);
+      font: 13px/1.35 system-ui, sans-serif;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      margin-left: 5px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+
+    .dot.ok {
+      background: var(--ok);
+    }
+
+    .dot.bad {
+      background: var(--bad);
+    }
+
+    .score-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 42px;
+      gap: 10px;
+      align-items: center;
+      font: 13px/1.2 system-ui, sans-serif;
+    }
+
+    .meter {
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(39, 35, 31, 0.1);
+      overflow: hidden;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      width: var(--value, 0%);
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--moss), var(--terracotta));
+    }
+
+    .artifact-list {
+      display: grid;
+      gap: 8px;
+      font: 13px/1.45 system-ui, sans-serif;
+    }
+
+    .artifact {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 252, 245, 0.58);
+      border: 1px solid rgba(39, 35, 31, 0.12);
+    }
+
+    .copy-final-tab {
+      margin-left: 4px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .empty {
+      color: var(--muted);
+      font: 14px/1.6 system-ui, sans-serif;
+    }
+
+    .edit-dialog {
+      width: min(560px, calc(100vw - 28px));
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 0;
+      background: rgba(255, 252, 245, 0.96);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .edit-dialog::backdrop {
+      background: rgba(39, 35, 31, 0.28);
+      backdrop-filter: blur(4px);
+    }
+
+    .edit-dialog-body {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+    }
+
+    .edit-dialog-title {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .edit-dialog-help {
+      margin: 0;
+      color: var(--muted);
+      font: 13px/1.5 system-ui, sans-serif;
+    }
+
+    .edit-dialog textarea {
+      min-height: 160px;
+    }
+
+    @media (max-width: 1180px) {
+      .workspace {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .right-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .app-shell {
+        width: min(100vw - 20px, 720px);
+        padding-top: 10px;
+      }
+
+      .topbar,
+      .workspace,
+      .workflow-list,
+      .content-grid,
+      .card-grid,
+      .constraint-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .workflow-list {
+        gap: 12px;
+      }
+
+      .step::before {
+        left: 27px;
+        top: -13px;
+        width: 2px;
+        height: 12px;
+        transform: none;
+      }
+
+      .step:first-child::before {
+        display: none;
+      }
+
+      .status-strip {
+        justify-content: flex-start;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Phase 0 静态设计稿</p>
+        <h1>同人短篇工作台</h1>
+        <p class="summary">输入一个同人创意，先让系统解析成故事卡，再逐步确认原作设定、短篇计划、草稿、审阅和改写内容。当前页面使用示例数据模拟完整流程。</p>
+      </div>
+      <div class="status-strip" aria-live="polite">
+        <span class="pill warn" id="statePill" title="当前工作流状态">当前：待确认故事卡</span>
+        <span class="pill" id="artifactPill" title="已生成的目标产物数量">产物：0/7</span>
+        <span class="pill ok" title="所有关键步骤都需要人工确认">人工确认：开启</span>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <article class="panel idea-panel" id="ideaPanel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">创意输入</h2>
+            <p class="panel-subtitle">自由写脑洞、限制、想看的场面和不要踩的雷。</p>
+          </div>
+        </div>
+        <div class="panel-body idea-input">
+          <label>
+            <span>同人创意</span>
+            <textarea id="ideaText">原作是《示例恋歌》，想写沈知晚 x 陆承舟。时间线在第二季结尾后，陆承舟离开王都前一晚。核心梗是“未寄出的信”和“雨夜共伞”。希望两个人都克制，不要突然告白，但要让读者感觉他们其实都明白。必须有藏在书页里的旧信、长廊雨声、陆承舟把伞偏向她。不要写成恋爱脑，不要破坏陆承舟一贯的自持。目标 5000 字，开放式偏 HE。</textarea>
+          </label>
+          <div class="action-row">
+            <button class="primary" id="parseBtn">解析创意</button>
+            <button class="quiet" id="resetBtn">恢复样例</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel" id="storyCardPanel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">结构化故事卡</h2>
+            <p class="panel-subtitle">解析结果可编辑，确认后才能生成短篇计划。</p>
+          </div>
+          <span class="pill" id="cardStatus">未解析</span>
+        </div>
+        <div class="panel-body">
+          <div class="card-grid">
+            <label>
+              <span class="field-label-row">原作 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="source" data-edit-kind="string" data-edit-label="原作">修改</button></span>
+              <input id="fandom" value="">
+            </label>
+            <label>
+              <span class="field-label-row">CP / 关系 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="relationship" data-edit-kind="string" data-edit-label="CP / 关系">修改</button></span>
+              <input id="pairing" value="">
+            </label>
+            <label>
+              <span class="field-label-row">时间线 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="timeline" data-edit-kind="string" data-edit-label="时间线">修改</button></span>
+              <input id="timeline" value="">
+            </label>
+            <label>
+              <span class="field-label-row">目标字数 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="targetWordCount" data-edit-kind="number" data-edit-label="目标字数">修改</button></span>
+              <input id="lengthTarget" value="">
+            </label>
+            <label class="field-wide">
+              <span class="field-label-row">核心前提 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="summary" data-edit-kind="string" data-edit-label="核心前提">修改</button></span>
+              <input id="premise" value="">
+            </label>
+            <label>
+              <span class="field-label-row">核心梗 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="tropes" data-edit-kind="array" data-edit-label="核心梗">修改</button></span>
+              <input id="coreTrope" value="">
+            </label>
+            <label>
+              <span class="field-label-row">结局倾向 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="ending" data-edit-kind="string" data-edit-label="结局倾向">修改</button></span>
+              <select id="endingPreference">
+                <option value="">未设置</option>
+                <option value="he">HE</option>
+                <option value="be">BE</option>
+                <option value="open">开放式</option>
+                <option value="bittersweet">苦甜</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="constraint-grid">
+            <section class="constraint">
+              <h3 class="constraint-title-row">必须出现 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="requiredScenes" data-edit-kind="array" data-edit-label="必须出现">修改</button></h3>
+              <div class="tags" id="mustHaveScenes"></div>
+            </section>
+            <section class="constraint">
+              <h3 class="constraint-title-row">雷点 / 禁区 <button type="button" class="story-card-edit-btn" data-edit-target="idea" data-edit-field="dislikes" data-edit-kind="array" data-edit-label="雷点 / 禁区">修改</button></h3>
+              <div class="tags" id="avoidTags"></div>
+            </section>
+            <section class="constraint">
+              <h3 class="constraint-title-row">原作硬约束 <button type="button" class="story-card-edit-btn" data-edit-target="canon" data-edit-field="hardCanon" data-edit-kind="array" data-edit-label="原作硬约束">修改</button></h3>
+              <ul id="hardCanon"></ul>
+            </section>
+            <section class="constraint">
+              <h3 class="constraint-title-row">本篇私设 <button type="button" class="story-card-edit-btn" data-edit-target="canon" data-edit-field="risks" data-edit-kind="array" data-edit-label="本篇私设">修改</button></h3>
+              <ul id="privateSettings"></ul>
+            </section>
+          </div>
+
+          <div class="action-row" style="margin-top: 14px;">
+            <button class="primary" id="approveIdeaBtn" disabled>确认故事卡</button>
+            <button class="danger" id="reviseIdeaBtn" disabled>退回修改</button>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel right-panel flow-panel" id="flowPanel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">创作流水线</h2>
+            <p class="panel-subtitle">已完成步骤可回看，当前步骤负责执行和确认。</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="workflow-list" id="workflowList"></div>
+          <section class="gate">
+            <h3 id="gateTitle">等待解析创意</h3>
+            <p id="gateText">先点击“解析创意”，生成可编辑故事卡和原作约束。</p>
+            <div class="action-row">
+              <button class="primary" id="nextActionBtn" disabled>执行下一步</button>
+              <button class="quiet" id="inspectBtn">查看产物</button>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="panel tabs-panel" id="outputPanel">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="plan">短篇计划</button>
+          <button class="tab" data-tab="draft">草稿</button>
+          <button class="tab" data-tab="review">审阅检查</button>
+          <button class="tab" data-tab="artifacts">产物</button>
+        </div>
+
+        <div class="tab-content active" id="tab-plan">
+          <div class="content-grid">
+            <div class="document" id="planDoc">短篇计划将在“确认故事卡”后生成。</div>
+            <div>
+              <h2 class="panel-title">计划检查</h2>
+              <p class="panel-subtitle">检查计划是否覆盖梗、关系张力、原作设定和禁区。</p>
+              <div class="checklist" id="planChecks"></div>
+              <div class="action-row" style="margin-top: 14px;">
+                <button class="primary" id="approvePlanBtn" disabled>确认计划</button>
+                <button class="danger" id="rejectPlanBtn" disabled>退回计划</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-draft">
+          <div class="content-grid">
+            <div class="document" id="draftDoc">草稿将在“确认计划”后生成。</div>
+            <div>
+              <h2 class="panel-title">草稿确认</h2>
+              <p class="panel-subtitle">检查正文是否执行计划、保留角色自持，并规避禁区。</p>
+              <div class="checklist" id="draftChecks"></div>
+              <div class="action-row" style="margin-top: 14px;">
+                <button class="primary" id="approveDraftBtn" disabled>确认草稿</button>
+                <button class="danger" id="rejectDraftBtn" disabled>要求改写方向</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-review">
+          <div class="content-grid">
+            <div>
+              <h2 class="panel-title">审阅维度</h2>
+              <p class="panel-subtitle">示例审阅会检测角色还原、原作设定、CP 张力和雷点。</p>
+              <div class="score-grid" id="scoreGrid"></div>
+              <div class="action-row" style="margin-top: 14px;">
+                <button class="primary" id="runReviewBtn" disabled>执行审阅</button>
+                <button id="rewriteBtn" disabled>生成改写稿</button>
+                <button class="primary" id="acceptBtn" disabled>接受终稿</button>
+              </div>
+            </div>
+            <div class="document" id="reviewDoc">审阅结果将在草稿确认后生成。</div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-artifacts">
+          <div class="content-grid">
+            <div>
+              <h2 class="panel-title">产物摘要</h2>
+              <p class="panel-subtitle">查看当前 workflow 已生成的文件路径和终稿内容。</p>
+              <div class="action-row" style="margin: 10px 0 12px;">
+                <button class="quiet copy-final-tab hidden" id="copyFinalBtn" disabled>复制终稿</button>
+              </div>
+              <div class="artifact-list" id="artifactList"></div>
+            </div>
+            <div class="document" id="finalDoc">终稿将在审阅 / 改写后由人工接受。</div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <dialog class="edit-dialog" id="storyCardEditDialog">
+    <form method="dialog" class="edit-dialog-body">
+      <h2 class="edit-dialog-title" id="storyCardEditTitle">修改故事卡</h2>
+      <p class="edit-dialog-help" id="storyCardEditHelp">每行一项；确认后会写回当前故事卡草稿。</p>
+      <textarea id="storyCardEditValue"></textarea>
+      <div class="action-row">
+        <button type="button" class="primary" id="storyCardEditSaveBtn">确认修改</button>
+        <button type="button" class="quiet" id="storyCardEditCancelBtn">取消</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const sampleIdea = document.getElementById("ideaText").value;
+    const STORY_KEY = "fanfic-ui-story-id";
+    const API = {
+      session: "/api/fanfic/session",
+      action: "/api/fanfic/action",
+      storyCard: "/api/fanfic/story-card"
+    };
+
+    let storyId = localStorage.getItem(STORY_KEY) || createStoryId();
+    let snapshot = null;
+    let busy = false;
+    let busyCommand = "";
+    let lastError = "";
+    let activeStoryCardEdit = null;
+    let activeStage = "";
+
+    const statusLabels = {
+      idea_pending_confirm: "当前：待确认故事卡",
+      idea_confirmed: "当前：故事卡已确认",
+      plan_pending_confirm: "当前：待确认短篇计划",
+      plan_confirmed: "当前：计划已确认",
+      draft_pending_confirm: "当前：待确认草稿",
+      review_pending_confirm: "当前：待执行审阅",
+      rewrite_pending_confirm: "当前：待改写或接受",
+      accepted: "当前：终稿已接受",
+      blocked: "当前：流程阻断"
+    };
+
+    const workflow = [
+      ["idea", "创意输入", "填写脑洞、限制和想看的场面"],
+      ["story", "故事卡", "确认原作、关系、梗和禁区"],
+      ["plan", "短篇计划", "生成并确认场景节拍"],
+      ["draft", "草稿", "生成正文并人工确认"],
+      ["review", "审阅", "检查设定、角色和禁区"],
+      ["final", "改写/终稿", "改写后接受并复制终稿"]
+    ];
+
+    const stageTabs = {
+      plan: "plan",
+      draft: "draft",
+      review: "review",
+      final: "artifacts",
+      artifacts: "artifacts"
+    };
+
+    const artifactLabels = {
+      drafted: "草稿",
+      confirmed: "已确认",
+      created: "已创建",
+      accepted: "已接受"
+    };
+
+    const dimensionLabels = {
+      canonFit: "角色还原",
+      requiredSceneCoverage: "必选场面",
+      avoidListSafety: "禁区规避",
+      proseQuality: "文本质量",
+      relationshipTension: "关系张力",
+      pacing: "节奏"
+    };
+
+    const buttonIdleLabels = {
+      nextActionBtn: "执行下一步",
+      parseBtn: "解析创意",
+      resetBtn: "恢复样例",
+      approveIdeaBtn: "确认故事卡",
+      reviseIdeaBtn: "退回修改",
+      approvePlanBtn: "确认计划",
+      rejectPlanBtn: "退回计划",
+      approveDraftBtn: "确认草稿",
+      rejectDraftBtn: "要求改写方向",
+      runReviewBtn: "执行审阅",
+      rewriteBtn: "生成改写稿",
+      acceptBtn: "接受终稿"
+    };
+
+    const commandButtonIds = {
+      parse_idea: "parseBtn",
+      approve_idea: "approveIdeaBtn",
+      generate_plan: "nextActionBtn",
+      approve_plan: "approvePlanBtn",
+      generate_draft: "nextActionBtn",
+      approve_draft: "approveDraftBtn",
+      run_review: "runReviewBtn",
+      generate_rewrite: "rewriteBtn",
+      accept_final: "acceptBtn",
+      session: "resetBtn"
+    };
+
+    const buttonBusyLabels = {
+      parse_idea: "解析中...",
+      approve_idea: "确认中...",
+      generate_plan: "计划生成中...",
+      approve_plan: "确认中...",
+      generate_draft: "草稿生成中...",
+      approve_draft: "确认中...",
+      run_review: "审阅中...",
+      generate_rewrite: "改写中...",
+      accept_final: "接受中...",
+      session: "连接中..."
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function createStoryId() {
+      const id = "ui-" + Date.now().toString(36);
+      localStorage.setItem(STORY_KEY, id);
+      return id;
+    }
+
+    async function requestJson(url, body) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error || `请求失败：${response.status}`);
+      }
+      return payload.snapshot;
+    }
+
+    async function startSession({ fresh = false, preserveIdeaText = false } = {}) {
+      const currentIdeaText = $("ideaText").value;
+      if (fresh) {
+        storyId = createStoryId();
+        $("ideaText").value = preserveIdeaText ? currentIdeaText : sampleIdea;
+      }
+      setBusy(true, "正在连接本地工作流...", "session");
+      try {
+        snapshot = await requestJson(API.session, { storyId });
+        lastError = "";
+        activeStage = "";
+        applySnapshot(snapshot);
+      } catch (error) {
+        lastError = error.message;
+        renderWorkflow();
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function runAction(command, extra = {}) {
+      if (busy) return false;
+      setBusy(true, actionBusyText(command), command);
+      try {
+        snapshot = await requestJson(API.action, { storyId, command, ...extra });
+        lastError = "";
+        activeStage = "";
+        applySnapshot(snapshot);
+        return true;
+      } catch (error) {
+        lastError = error.message;
+        renderWorkflow();
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function actionBusyText(command) {
+      return {
+        parse_idea: "正在解析创意...",
+        approve_idea: "正在确认故事卡...",
+        generate_plan: "正在生成短篇计划...",
+        approve_plan: "正在确认计划...",
+        generate_draft: "正在生成草稿...",
+        approve_draft: "正在确认草稿...",
+        run_review: "正在执行审阅...",
+        generate_rewrite: "正在生成改写稿...",
+        accept_final: "正在接受终稿..."
+      }[command] || "正在执行...";
+    }
+
+    function setBusy(value, text = "", command = "") {
+      const previousCommand = busyCommand;
+      busy = value;
+      busyCommand = value ? command : "";
+      if (text) {
+        $("gateText").textContent = text;
+      }
+      updateBusyVisuals(previousCommand);
+      if (value && command === "parse_idea") {
+        renderStoryCardLoading();
+      }
+      if (!value && previousCommand === "parse_idea" && !artifact("idea")) {
+        renderStoryCard();
+      }
+      updateActionAvailability();
+      if (!value) {
+        updateGate();
+      }
+    }
+
+    function updateBusyVisuals(previousCommand = "") {
+      const command = busy ? busyCommand : previousCommand;
+      for (const [id, label] of Object.entries(buttonIdleLabels)) {
+        const button = $(id);
+        if (!button) continue;
+        button.classList.remove("is-loading");
+        button.textContent = label;
+      }
+      if (!busy || !command) return;
+      const buttonId = commandButtonIds[command];
+      if (!buttonId) return;
+      const button = $(buttonId);
+      if (!button) return;
+      button.classList.add("is-loading");
+      button.textContent = buttonBusyLabels[command] || "执行中...";
+    }
+
+    function applySnapshot(nextSnapshot) {
+      snapshot = nextSnapshot;
+      renderStoryCard();
+      renderPlan();
+      renderDraft();
+      renderReview();
+      renderFinal();
+      renderArtifacts();
+      renderWorkflow();
+    }
+
+    function currentState() {
+      return snapshot?.state ?? { status: "idea_pending_confirm", artifacts: {} };
+    }
+
+    function currentStage() {
+      const state = currentState();
+      if (state.status === "accepted") return "final";
+      if (state.status === "idea_pending_confirm") return artifact("idea") ? "story" : "idea";
+      if (state.status === "idea_confirmed" || state.status === "plan_pending_confirm") return "plan";
+      if (state.status === "plan_confirmed" || state.status === "draft_pending_confirm") return "draft";
+      if (state.status === "review_pending_confirm") return "review";
+      if (state.status === "rewrite_pending_confirm") return "final";
+      return "idea";
+    }
+
+    function displayStage() {
+      return activeStage || currentStage();
+    }
+
+    function stageIndex(stage) {
+      return workflow.findIndex((item) => item[0] === stage);
+    }
+
+    function stageLabel(stage) {
+      return workflow.find((item) => item[0] === stage)?.[1] ?? "产物";
+    }
+
+    function isViewingReadOnly() {
+      return activeStage && activeStage !== currentStage();
+    }
+
+    function isStageDone(stage) {
+      const state = currentState();
+      if (state.status === "accepted") return true;
+      const order = stageIndex(stage);
+      const current = stageIndex(currentStage());
+      return current >= 0 && order >= 0 && order < current;
+    }
+
+    function isStageCurrent(stage) {
+      return stage === currentStage() && currentState().status !== "accepted";
+    }
+
+    function isStageAccessible(stage) {
+      return isStageDone(stage) || isStageCurrent(stage) || (currentState().status === "accepted" && stage === "final");
+    }
+
+    function setActiveStage(stage) {
+      if (!isStageAccessible(stage)) return;
+      activeStage = stage === currentStage() ? "" : stage;
+      renderWorkflow();
+    }
+
+    function artifact(key) {
+      return snapshot?.artifacts?.[key] ?? null;
+    }
+
+    function artifactContent(key) {
+      return artifact(key)?.content ?? null;
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function setTags(id, values, clay = false) {
+      $(id).innerHTML = (values ?? []).map((value) => `<span class="tag ${clay ? "clay" : ""}">${escapeHtml(value)}</span>`).join("");
+    }
+
+    function setList(id, values) {
+      $(id).innerHTML = (values ?? []).map((value) => `<li>${escapeHtml(value)}</li>`).join("");
+    }
+
+    function getHardCanonItems(canon) {
+      return [...(canon?.constraints ?? []), ...(canon?.characterNotes ?? []), ...(canon?.timelineNotes ?? [])];
+    }
+
+    function renderStoryCard() {
+      const idea = artifactContent("idea");
+      const canon = artifactContent("canon");
+      const state = currentState();
+      setCardLoading(false);
+      if (!idea) {
+        clearStoryCard();
+        return;
+      }
+      $("fandom").value = idea.source ?? "";
+      $("pairing").value = idea.relationship ?? "";
+      $("timeline").value = [idea.timeline, idea.divergence].filter(Boolean).join("，");
+      $("lengthTarget").value = idea.targetWordCount ?? "";
+      $("premise").value = idea.summary ?? "";
+      $("coreTrope").value = (idea.tropes ?? []).join(" / ");
+      setEnding(idea.ending);
+      setTags("mustHaveScenes", idea.requiredScenes ?? []);
+      setTags("avoidTags", idea.dislikes ?? [], true);
+      setList("hardCanon", getHardCanonItems(canon));
+      setList("privateSettings", canon?.risks ?? []);
+      $("cardStatus").textContent = state.artifacts?.idea?.status === "confirmed" ? "已确认" : "待确认";
+    }
+
+    function clearStoryCard() {
+      ["fandom", "pairing", "timeline", "lengthTarget", "premise", "coreTrope"].forEach((id) => $(id).value = "");
+      $("endingPreference").value = "open";
+      setTags("mustHaveScenes", []);
+      setTags("avoidTags", [], true);
+      setList("hardCanon", []);
+      setList("privateSettings", []);
+      $("cardStatus").textContent = "未解析";
+    }
+
+    function renderStoryCardLoading() {
+      setCardLoading(true);
+      $("cardStatus").textContent = "解析中";
+      $("fandom").value = "正在识别原作...";
+      $("pairing").value = "正在识别 CP / 关系...";
+      $("timeline").value = "正在识别时间线...";
+      $("lengthTarget").value = "正在识别目标字数...";
+      $("premise").value = "正在整理核心前提...";
+      $("coreTrope").value = "正在提取核心梗...";
+      setTags("mustHaveScenes", ["正在提取必须出现的场面..."]);
+      setTags("avoidTags", ["正在提取雷点 / 禁区..."], true);
+      setList("hardCanon", ["正在整理原作硬约束..."]);
+      setList("privateSettings", ["正在整理本篇私设..."]);
+    }
+
+    function setCardLoading(value) {
+      $("cardStatus").classList.toggle("loading-pill", value);
+      $("cardStatus").closest(".panel")?.classList.toggle("card-loading", value);
+    }
+
+    function setEnding(ending) {
+      const value = String(ending ?? "").toLowerCase();
+      if (value.includes("be")) $("endingPreference").value = "BE";
+      else if (value.includes("he") && !value.includes("open")) $("endingPreference").value = "HE";
+      else $("endingPreference").value = "open";
+    }
+
+    function renderPlan() {
+      const plan = artifactContent("plan");
+      if (!plan) {
+        $("planDoc").textContent = "短篇计划将在“确认故事卡”后生成。";
+        $("planChecks").innerHTML = "";
+        return;
+      }
+      $("planDoc").textContent = formatPlan(plan);
+      $("planChecks").innerHTML = [
+        ["场景结构", `${plan.scenes?.length ?? 0} 个场景，按短篇节奏推进`, "ok"],
+        ["必选场面", (plan.requiredSceneCoverage ?? []).map((item) => item.requiredScene).join("、") || "未列出", "ok"],
+        ["禁区检查", (plan.avoidChecks ?? []).join("；") || "未列出", "ok"]
+      ].map(renderCheck).join("");
+    }
+
+    function formatPlan(plan) {
+      const scenes = (plan.scenes ?? []).map((scene) => {
+        const beats = (scene.beats ?? []).map((beat) => `  - ${beat}`).join("\n");
+        return `${scene.order}. ${scene.title}\n目的：${scene.purpose}\n情绪转折：${scene.emotionalTurn}\n节拍：\n${beats}`;
+      }).join("\n\n");
+      return [
+        plan.title,
+        "",
+        `Logline：${plan.logline ?? ""}`,
+        `Premise：${plan.premise ?? ""}`,
+        `情绪弧：${plan.emotionalArc?.from ?? ""} -> ${plan.emotionalArc?.to ?? ""}`,
+        "",
+        scenes,
+        "",
+        `结尾策略：${plan.endingStrategy ?? ""}`,
+        `写作备注：${(plan.writerNotes ?? []).join("；")}`
+      ].join("\n").trim();
+    }
+
+    function renderDraft() {
+      const rewrite = artifactContent("rewriteDraft");
+      const draft = artifactContent("draft");
+      const text = rewrite || draft;
+      if (!text) {
+        $("draftDoc").textContent = "草稿将在“确认计划”后生成。";
+        $("draftChecks").innerHTML = "";
+        return;
+      }
+      $("draftDoc").textContent = text;
+      $("draftChecks").innerHTML = [
+        [rewrite ? "当前版本" : "初稿版本", rewrite ? "正在查看改写稿 draft-002.md" : "正在查看初稿 draft-001.md", "ok"],
+        ["人工 gate", currentState().status === "draft_pending_confirm" ? "请确认草稿后再审阅" : "草稿已通过当前 gate", "ok"]
+      ].map(renderCheck).join("");
+    }
+
+    function renderReview() {
+      const review = artifactContent("review");
+      if (!review) {
+        $("reviewDoc").textContent = "审阅结果将在草稿确认后生成。";
+        $("scoreGrid").innerHTML = "";
+        return;
+      }
+      const dimensions = review.dimensions ?? {};
+      $("scoreGrid").innerHTML = Object.entries(dimensions).map(([name, value]) => {
+        const percent = Math.max(0, Math.min(100, Number(value) * 20));
+        return `
+          <div class="score-row">
+            <span>${escapeHtml(dimensionLabels[name] ?? name)}</span>
+            <div class="meter"><span style="--value:${percent}%"></span></div>
+            <strong>${escapeHtml(value)}</strong>
+          </div>
+        `;
+      }).join("");
+      const issues = (review.issues ?? []).map((item, index) => `${index + 1}. [${item.severity}] ${item.area}：${item.message}\n建议：${item.suggestion}`).join("\n");
+      $("reviewDoc").textContent = [
+        `总分：${review.score}`,
+        `结论：${review.verdict}`,
+        "",
+        `已通过：${(review.passedChecks ?? []).join("；")}`,
+        "",
+        "问题与建议",
+        issues || "暂无阻断问题。",
+        "",
+        "改写方向",
+        (review.rewriteBrief ?? []).join("\n")
+      ].join("\n").trim();
+    }
+
+    function renderFinal() {
+      const finalText = artifactContent("final");
+      $("finalDoc").textContent = finalText || "终稿将在审阅 / 改写后由人工接受。";
+      $("copyFinalBtn").disabled = !finalText;
+      $("copyFinalBtn").classList.toggle("hidden", !finalText);
+      if (finalText) $("copyFinalBtn").textContent = "复制终稿";
+    }
+
+    function renderArtifacts() {
+      const entries = Object.entries(snapshot?.artifacts ?? {});
+      $("artifactPill").textContent = `产物：${entries.length}/8`;
+      $("artifactList").innerHTML = entries.length
+        ? entries.map(([key, item]) => `<div class="artifact"><span>${escapeHtml(item.path || key)}</span><strong>${escapeHtml(artifactLabels[item.status] ?? item.status)}</strong></div>`).join("")
+        : `<p class="empty">还没有生成产物。</p>`;
+    }
+
+    function renderWorkflow() {
+      if (activeStage && activeStage !== "artifacts" && !isStageAccessible(activeStage)) activeStage = "";
+      const state = currentState();
+      $("statePill").textContent = busy ? "当前：执行中" : (statusLabels[state.status] ?? state.status);
+      $("workflowList").innerHTML = workflow.map(([stage, name, note], index) => {
+        const done = isStageDone(stage);
+        const current = isStageCurrent(stage);
+        const viewing = displayStage() === stage && activeStage;
+        const accessible = isStageAccessible(stage);
+        const stateText = viewing ? "查看中" : current ? "进行中" : done ? "已完成" : "等待中";
+        const indexText = done ? "✓" : index + 1;
+        return `
+          <button type="button" class="step ${done ? "done" : ""} ${current ? "current" : ""} ${viewing ? "viewing" : ""}" data-stage="${stage}" ${accessible ? "" : "disabled"}>
+            <span class="step-index">${indexText}</span>
+            <span>
+              <p class="step-name">${name}</p>
+              <p class="step-note">${note}</p>
+              <span class="step-state">${stateText}</span>
+            </span>
+          </button>
+        `;
+      }).join("");
+      renderStageWorkspace();
+      updateActionAvailability();
+      updateGate();
+    }
+
+    function renderStageWorkspace() {
+      const stage = displayStage();
+      $("ideaPanel").classList.toggle("stage-hidden", stage !== "idea");
+      $("storyCardPanel").classList.toggle("stage-hidden", stage !== "story");
+      $("outputPanel").classList.toggle("stage-hidden", !stageTabs[stage]);
+      if (stageTabs[stage]) switchTab(stageTabs[stage]);
+    }
+
+    function updateActionAvailability() {
+      const state = currentState();
+      const disabled = busy;
+      const readOnly = Boolean(isViewingReadOnly() || activeStage === "artifacts");
+      const canReviseViewedStory = activeStage === "story" && isStageDone("story") && Boolean(artifact("idea"));
+      $("parseBtn").disabled = disabled || readOnly || !(state.status === "idea_pending_confirm" && !artifact("idea"));
+      $("resetBtn").disabled = disabled || readOnly;
+      $("approveIdeaBtn").disabled = disabled || readOnly || !(state.status === "idea_pending_confirm" && artifact("idea"));
+      $("reviseIdeaBtn").disabled = disabled || !((!readOnly && state.status === "idea_pending_confirm" && artifact("idea")) || canReviseViewedStory);
+      $("approvePlanBtn").disabled = disabled || readOnly || !(state.status === "plan_pending_confirm" && artifact("plan"));
+      $("rejectPlanBtn").disabled = disabled || readOnly || !(state.status === "plan_pending_confirm" && artifact("plan"));
+      $("approveDraftBtn").disabled = disabled || readOnly || !(state.status === "draft_pending_confirm" && (artifact("draft") || artifact("rewriteDraft")));
+      $("rejectDraftBtn").disabled = disabled || readOnly || !(state.status === "draft_pending_confirm" && (artifact("draft") || artifact("rewriteDraft")));
+      $("runReviewBtn").disabled = disabled || readOnly || state.status !== "review_pending_confirm";
+      $("rewriteBtn").disabled = disabled || readOnly || state.status !== "rewrite_pending_confirm";
+      $("acceptBtn").disabled = disabled || readOnly || state.status !== "rewrite_pending_confirm";
+      $("inspectBtn").disabled = disabled || !Object.keys(snapshot?.artifacts ?? {}).length;
+      updateStoryCardEditAvailability();
+    }
+
+    function updateStoryCardEditAvailability() {
+      const editable = canEditStoryCard();
+      document.querySelectorAll(".story-card-edit-btn").forEach((button) => {
+        button.disabled = !editable;
+      });
+    }
+
+    function canEditStoryCard() {
+      const state = currentState();
+      return !isViewingReadOnly() && !busy && state.status === "idea_pending_confirm" && Boolean(artifact("idea"));
+    }
+
+    function updateGate() {
+      if (busy) return;
+      const state = currentState();
+      if (isViewingReadOnly() || activeStage === "artifacts") {
+        const label = activeStage === "artifacts" ? "产物" : stageLabel(activeStage);
+        $("gateTitle").textContent = `查看${label}`;
+        $("gateText").textContent = activeStage === "story"
+          ? "当前为只读查看。需要修改时，请点击故事卡里的“退回修改”开启新的修改会话。"
+          : "当前为只读查看。返回当前步骤后可以继续执行 workflow。";
+        $("nextActionBtn").textContent = "返回当前步骤";
+        $("nextActionBtn").disabled = false;
+        return;
+      }
+
+      const gate = {
+        idea_pending_confirm: artifact("idea")
+          ? ["等待确认故事卡", "解析结果已写入 _idea.json 和 _canon.json，请确认后继续。", "等待确认", false]
+          : ["等待解析创意", "点击“解析创意”，调用真实 LLM 生成故事卡。", "解析创意", true],
+        idea_confirmed: ["故事卡已确认", "下一步会调用 planner 生成 _plan.json。", "生成短篇计划", true],
+        plan_pending_confirm: ["等待确认短篇计划", "计划需要人工确认，确认后才能生成写作上下文包和草稿。", "等待确认", false],
+        plan_confirmed: ["计划已确认", "下一步会生成 writer context 和 draft-001.md。", "生成草稿", true],
+        draft_pending_confirm: ["等待确认草稿", "请先确认当前草稿；确认后才能执行审阅。", "等待确认", false],
+        review_pending_confirm: ["等待审阅", "下一步会生成 _reviews/review-001.json。", "执行审阅", true],
+        rewrite_pending_confirm: ["等待改写或接受", "可以生成 draft-002.md，也可以接受当前确认稿为 final.md。", "生成改写稿", true],
+        accepted: ["终稿已接受", "final.md 已生成，可以复制终稿。", "已完成", false],
+        blocked: ["流程阻断", "请查看错误信息后重试。", "无法继续", false]
+      }[state.status] || ["等待下一步", "当前状态需要人工确认。", "执行下一步", false];
+
+      $("gateTitle").textContent = lastError ? "执行失败" : gate[0];
+      $("gateText").textContent = lastError || gate[1];
+      $("nextActionBtn").textContent = gate[2];
+      $("nextActionBtn").disabled = !gate[3] || state.status === "accepted" || busy;
+    }
+
+    function renderCheck([title, text, kind]) {
+      const cls = kind === "ok" ? "ok" : kind === "bad" ? "bad" : "";
+      const label = kind === "ok" ? "通过" : kind === "bad" ? "阻断" : "注意";
+      return `
+        <div class="check">
+          <span class="dot ${cls}"></span>
+          <span><strong>${escapeHtml(title)}</strong><br>${escapeHtml(text)}</span>
+          <span class="pill ${kind === "ok" ? "ok" : "warn"}">${label}</span>
+        </div>
+      `;
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name));
+      document.querySelectorAll(".tab-content").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`));
+    }
+
+    function openStoryCardEditDialog(button) {
+      if (!canEditStoryCard()) return;
+      activeStoryCardEdit = {
+        target: button.dataset.editTarget,
+        field: button.dataset.editField,
+        kind: button.dataset.editKind,
+        label: button.dataset.editLabel
+      };
+      $("storyCardEditTitle").textContent = `修改${activeStoryCardEdit.label}`;
+      $("storyCardEditHelp").textContent = activeStoryCardEdit.kind === "array" ? "每行一项；确认后只更新这一项故事卡字段。" : "确认后只更新这一项故事卡字段。";
+      $("storyCardEditValue").value = formatStoryCardEditValue(activeStoryCardEdit);
+      $("storyCardEditDialog").showModal();
+    }
+
+    function formatStoryCardEditValue(edit) {
+      const content = artifactContent(edit.target);
+      if (edit.target === "canon" && edit.field === "hardCanon") return getHardCanonItems(content).join("\n");
+      const value = content?.[edit.field];
+      if (Array.isArray(value)) return value.join("\n");
+      return value == null ? "" : String(value);
+    }
+
+    function parseStoryCardEditValue(edit) {
+      const raw = $("storyCardEditValue").value.trim();
+      if (edit.kind === "array") return raw.split(/\n+/).map((item) => item.replace(/^[\s•·*-]+/, "").trim()).filter(Boolean);
+      if (edit.kind === "number") return Number(raw);
+      return raw;
+    }
+
+    async function saveStoryCardEdit() {
+      if (!activeStoryCardEdit) return;
+      const value = parseStoryCardEditValue(activeStoryCardEdit);
+      try {
+        $("storyCardEditSaveBtn").disabled = true;
+        snapshot = await requestJson(API.storyCard, {
+          storyId,
+          target: activeStoryCardEdit.target,
+          field: activeStoryCardEdit.field,
+          value
+        });
+        lastError = "";
+        $("storyCardEditDialog").close();
+        activeStoryCardEdit = null;
+        applySnapshot(snapshot);
+      } catch (error) {
+        lastError = error.message;
+        renderWorkflow();
+      } finally {
+        $("storyCardEditSaveBtn").disabled = false;
+      }
+    }
+
+    function runNextAction() {
+      if (isViewingReadOnly() || activeStage === "artifacts") {
+        activeStage = "";
+        renderWorkflow();
+        return;
+      }
+      const state = currentState();
+      if (state.status === "idea_pending_confirm" && !artifact("idea")) parseIdea();
+      else if (state.status === "idea_confirmed") generatePlan();
+      else if (state.status === "plan_confirmed") generateDraft();
+      else if (state.status === "review_pending_confirm") runReview();
+      else if (state.status === "rewrite_pending_confirm") rewriteDraft();
+    }
+
+    function parseIdea() {
+      runAction("parse_idea", { ideaText: $("ideaText").value });
+    }
+
+    function approveIdea() {
+      runAction("approve_idea");
+    }
+
+    async function startRevisionSession() {
+      snapshot = null;
+      lastError = "";
+      clearStoryCard();
+      renderPlan();
+      renderDraft();
+      renderReview();
+      renderFinal();
+      renderArtifacts();
+      await startSession({ fresh: true, preserveIdeaText: true });
+    }
+
+    function reviseIdea() {
+      startRevisionSession();
+    }
+
+    async function generatePlan() {
+      if (await runAction("generate_plan")) switchTab("plan");
+    }
+
+    function approvePlan() {
+      runAction("approve_plan");
+    }
+
+    function rejectPlan() {
+      lastError = "当前本地联调版暂未实现编辑计划；请修改创意后开启新会话。";
+      renderWorkflow();
+    }
+
+    async function generateDraft() {
+      if (await runAction("generate_draft")) switchTab("draft");
+    }
+
+    function approveDraft() {
+      runAction("approve_draft");
+    }
+
+    function rejectDraft() {
+      lastError = "请先执行审阅并生成改写稿；后续会加入人工改写方向输入。";
+      renderWorkflow();
+    }
+
+    async function runReview() {
+      if (await runAction("run_review")) switchTab("review");
+    }
+
+    async function rewriteDraft() {
+      if (await runAction("generate_rewrite")) switchTab("draft");
+    }
+
+    async function acceptFinal() {
+      if (await runAction("accept_final")) switchTab("artifacts");
+    }
+
+    async function copyFinal() {
+      const text = $("finalDoc").textContent.trim();
+      if (!text || !artifact("final")) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      $("copyFinalBtn").textContent = "已复制";
+      window.setTimeout(() => {
+        if (!$("copyFinalBtn").disabled) $("copyFinalBtn").textContent = "复制终稿";
+      }, 1400);
+    }
+
+    $("parseBtn").addEventListener("click", parseIdea);
+    $("resetBtn").addEventListener("click", () => startSession({ fresh: true }));
+    $("approveIdeaBtn").addEventListener("click", approveIdea);
+    $("reviseIdeaBtn").addEventListener("click", reviseIdea);
+    $("approvePlanBtn").addEventListener("click", approvePlan);
+    $("rejectPlanBtn").addEventListener("click", rejectPlan);
+    $("approveDraftBtn").addEventListener("click", approveDraft);
+    $("rejectDraftBtn").addEventListener("click", rejectDraft);
+    $("runReviewBtn").addEventListener("click", runReview);
+    $("rewriteBtn").addEventListener("click", rewriteDraft);
+    $("acceptBtn").addEventListener("click", acceptFinal);
+    $("copyFinalBtn").addEventListener("click", copyFinal);
+    $("nextActionBtn").addEventListener("click", runNextAction);
+    $("inspectBtn").addEventListener("click", () => { activeStage = "artifacts"; renderWorkflow(); });
+    $("storyCardEditSaveBtn").addEventListener("click", saveStoryCardEdit);
+    $("storyCardEditCancelBtn").addEventListener("click", () => $("storyCardEditDialog").close());
+    $("workflowList").addEventListener("click", (event) => {
+      const button = event.target.closest(".step");
+      if (!button || button.disabled) return;
+      setActiveStage(button.dataset.stage);
+    });
+    document.querySelectorAll(".story-card-edit-btn").forEach((button) => button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openStoryCardEditDialog(button);
+    }));
+    document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => switchTab(tab.dataset.tab)));
+
+    renderArtifacts();
+    renderWorkflow();
+    startSession();
+  </script>
+</body>
+</html>

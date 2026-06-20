@@ -16,10 +16,15 @@
  *
  * 角色列表：
  *   - WRITE:    正文创作    → 建议 Claude Sonnet
+ *   - FANFIC_WRITE: 同人短篇写作 → 默认回退 WRITE
  *   - PLAN:     规划策划    → 建议 DeepSeek / GLM
+ *   - FANFIC_PLAN: 同人短篇规划 → 默认回退 PLAN
  *   - REVIEW:   审稿分析    → 建议 DeepSeek / GLM
+ *   - FANFIC_REVIEW: 同人短篇审阅 → 默认回退 REVIEW
+ *   - FANFIC_REWRITE: 同人短篇改写 → 默认回退 WRITE
  *   - COMPRESS: 上下文压缩  → 建议 MiniMax
  *   - EXTRACT:  辅助提取    → 建议 MiniMax
+ *   - IDEA:     同人创意解析 → 建议 DeepSeek / GLM
  *   - OPUS:     关键章升级  → 建议 Claude Opus
  */
 
@@ -57,10 +62,20 @@ function getDeepSeekClient(): unknown {
 }
 
 // ── 默认配置（全局兜底）──────────────────────────────────
-const DEFAULT_API_KEY  = process.env.ANTHROPIC_API_KEY ?? "";
-const DEFAULT_BASE_URL = process.env.ANTHROPIC_BASE_URL;
-const DEFAULT_MODEL    = process.env.MODEL_ID ?? "claude-sonnet-4-20250514";
-const DEFAULT_PROVIDER: ProviderType = (process.env.DEFAULT_PROVIDER as ProviderType) || "anthropic";
+function inferProviderFromBaseURL(baseURL?: string): ProviderType | undefined {
+  if (!baseURL) return undefined;
+  const normalized = baseURL.replace(/\/+$/, "");
+  if (normalized.includes("api.deepseek.com") && !normalized.endsWith("/anthropic")) {
+    return "openai-compatible";
+  }
+  return undefined;
+}
+
+const DEFAULT_API_KEY = process.env.API_KEY ?? process.env.DEEPSEEK_API_KEY ?? process.env.ANTHROPIC_API_KEY ?? "";
+const DEFAULT_BASE_URL = process.env.BASE_URL ?? process.env.ANTHROPIC_BASE_URL;
+const DEFAULT_MODEL = process.env.MODEL ?? process.env.MODEL_ID ?? "claude-sonnet-4-20250514";
+const DEFAULT_PROVIDER: ProviderType =
+  (process.env.DEFAULT_PROVIDER as ProviderType | undefined) ?? inferProviderFromBaseURL(DEFAULT_BASE_URL) ?? "anthropic";
 
 // ── client 缓存（相同 baseURL + apiKey 复用同一个 client）──
 const clientCache = new Map<string, Anthropic>();
@@ -96,8 +111,15 @@ function getOrCreateClient(apiKey: string, baseURL?: string, provider?: Provider
  * 从环境变量构建一个角色的 ModelEndpoint
  * 未配置的字段回退到默认值
  */
-function buildEndpoint(role: string): ModelEndpoint {
-  const provider = (process.env[`${role}_PROVIDER`] as ProviderType) ?? DEFAULT_PROVIDER;
+function buildEndpoint(role: string, fallbackRole?: string): ModelEndpoint {
+  const apiKey = process.env[`${role}_API_KEY`] ?? (fallbackRole ? process.env[`${fallbackRole}_API_KEY`] : undefined) ?? DEFAULT_API_KEY;
+  const baseURL = process.env[`${role}_BASE_URL`] ?? (fallbackRole ? process.env[`${fallbackRole}_BASE_URL`] : undefined) ?? DEFAULT_BASE_URL;
+  const model = process.env[`${role}_MODEL`] ?? (fallbackRole ? process.env[`${fallbackRole}_MODEL`] : undefined) ?? DEFAULT_MODEL;
+  const provider =
+    (process.env[`${role}_PROVIDER`] as ProviderType | undefined) ??
+    (fallbackRole ? process.env[`${fallbackRole}_PROVIDER`] as ProviderType | undefined : undefined) ??
+    inferProviderFromBaseURL(baseURL) ??
+    DEFAULT_PROVIDER;
   
   // DeepSeek Web 特殊处理
   if (provider === "deepseek-web") {
@@ -113,10 +135,6 @@ function buildEndpoint(role: string): ModelEndpoint {
     console.warn(`[models] DeepSeek Web 配置缺失，${role} 回退到 Anthropic`);
   }
 
-  const apiKey  = process.env[`${role}_API_KEY`]  ?? DEFAULT_API_KEY;
-  const baseURL = process.env[`${role}_BASE_URL`] ?? DEFAULT_BASE_URL;
-  const model   = process.env[`${role}_MODEL`]    ?? DEFAULT_MODEL;
-
   return {
     client: getOrCreateClient(apiKey, baseURL, provider),
     model,
@@ -128,14 +146,24 @@ function buildEndpoint(role: string): ModelEndpoint {
 export const endpoints = {
   /** 正文创作：文笔、角色对话、情感表达 */
   write:    buildEndpoint("WRITE"),
+  /** 同人短篇写作：CP 张力、canon 贴合、梗兑现 */
+  fanficWrite: buildEndpoint("FANFIC_WRITE", "WRITE"),
+  /** 同人短篇改写：根据 review 改写当前稿 */
+  fanficRewrite: buildEndpoint("FANFIC_REWRITE", "WRITE"),
   /** 规划/策划：大纲、人物、关系、章节列表、单章计划 */
   plan:     buildEndpoint("PLAN"),
   /** 审稿/分析：自评、连贯性审计、全文分析 */
   review:   buildEndpoint("REVIEW"),
+  /** 同人短篇审阅：canon、required scenes、雷点、情绪张力 */
+  fanficReview: buildEndpoint("FANFIC_REVIEW", "REVIEW"),
   /** 上下文压缩：autoCompress 历史摘要 */
   compress: buildEndpoint("COMPRESS"),
   /** 辅助提取：角色声音档案等 */
   extract:  buildEndpoint("EXTRACT"),
+  /** 同人创意解析：脑洞拆解、约束提取、故事卡生成 */
+  idea:     buildEndpoint("IDEA"),
+  /** 同人短篇规划：大场景、beats、字数和约束映射 */
+  fanficPlan: buildEndpoint("FANFIC_PLAN", "PLAN"),
   /** 疑难分析：全文分析、连贯性审计、第二审稿人 */
   audit:    buildEndpoint("AUDIT"),
   /** 关键章节升级：首章/高潮/结尾/重写失败升级 */
@@ -151,10 +179,15 @@ export function printModelConfig(): void {
   console.log("\n── 模型路由配置 ──────────────────────────────");
   const labels: Record<ModelRole, string> = {
     write:    "正文创作",
+    fanficWrite: "同人短篇写作",
+    fanficRewrite: "同人短篇改写",
     plan:     "规划策划",
+    fanficPlan: "同人短篇规划",
     review:   "章节自评",
+    fanficReview: "同人短篇审阅",
     compress: "上下文压缩",
     extract:  "辅助提取",
+    idea:     "同人创意解析",
     audit:    "疑难分析",
     opus:     "关键章升级",
   };
