@@ -2,6 +2,16 @@ import { endpoints, type ModelEndpoint } from "../models.js";
 import { requestJsonText } from "./json-llm.js";
 import type { FanficCanonCard, FanficIdeaCard } from "./idea-parser.js";
 
+export interface FanficNarrativeStrategy {
+  purpose: string;
+  viewpointDistance: string;
+  emotionCarriers: string[];
+  surfaceSignals: string[];
+  withheldInterior: string[];
+  antiClicheMoves: string[];
+  closingMove: string;
+}
+
 export interface FanficPlanScene {
   order: number;
   title: string;
@@ -11,6 +21,7 @@ export interface FanficPlanScene {
   requiredScenes: string[];
   canonConstraints: string[];
   emotionalTurn: string;
+  narrativeStrategy: FanficNarrativeStrategy;
 }
 
 export interface FanficRequiredSceneCoverage {
@@ -56,6 +67,8 @@ function buildSystemPrompt(): string {
     "你是同人短篇小说 planner，只生成可执行短篇计划。",
     "不要写正文，不要审稿，不要决定文件路径或流程状态。",
     "计划必须是 4-5 个 scenes，每个 scene 至少包含 1 个 beat。",
+    "每个 scene 必须包含 narrativeStrategy，用来决定本场情绪如何被看见，而不是被作者解释。",
+    "narrativeStrategy 不是风格切换，而是短篇默认质量基线；不同场景可以使用贴身、半贴身、旁观、全知克制等不同叙事距离。",
     "必须输出严格 JSON，不要额外解释。",
   ].join("\n");
 }
@@ -85,7 +98,16 @@ function buildUserPrompt(idea: FanficIdeaCard, canon: FanficCanonCard): string {
     "      \"beats\": [\"2-3 个可写作小节拍\"],",
     "      \"requiredScenes\": [\"覆盖的必须场面，可空数组\"],",
     "      \"canonConstraints\": [\"本场景要遵守的原作约束\"],",
-    "      \"emotionalTurn\": \"情绪变化\"",
+    "      \"emotionalTurn\": \"情绪变化\",",
+    "      \"narrativeStrategy\": {",
+    "        \"purpose\": \"本场阅读效果：读者应如何感到情绪，而不是作者直接说明\",",
+    "        \"viewpointDistance\": \"贴身 / 半贴身 / 旁观 / 全知克制；按场景需要选择，不要全部旁观\",",
+    "        \"emotionCarriers\": [\"承接情绪的物件、动作、环境声或闲话\"],",
+    "        \"surfaceSignals\": [\"可被看见/听见的表层信号，如停顿、避开视线、衣袖、断箭、酒碗\"],",
+    "        \"withheldInterior\": [\"本场不要解释的内心信息或关系结论\"],",
+    "        \"antiClicheMoves\": [\"避免直白心理、作者总结、金句煽情、俗套比喻的具体约束\"],",
+    "        \"closingMove\": \"本场结尾如何克制收束，如日常一句话、物件回落、动作停住\"",
+    "      }",
     "    }",
     "  ],",
     "  \"requiredSceneCoverage\": [{ \"requiredScene\": \"必须场面\", \"sceneTitle\": \"对应 scene\" }],",
@@ -151,6 +173,17 @@ function normalizeScene(value: unknown): FanficPlanScene {
   assertStringArray(value.requiredScenes, "scene.requiredScenes");
   assertStringArray(value.canonConstraints, "scene.canonConstraints");
   assertString(value.emotionalTurn, "scene.emotionalTurn");
+  const baseScene = {
+    order: value.order,
+    title: value.title,
+    purpose: value.purpose,
+    wordBudget: value.wordBudget,
+    beats: value.beats,
+    requiredScenes: value.requiredScenes,
+    canonConstraints: value.canonConstraints,
+    emotionalTurn: value.emotionalTurn,
+  };
+  const narrativeStrategy = normalizeNarrativeStrategy(value.narrativeStrategy, baseScene);
   return {
     order: value.order,
     title: value.title,
@@ -160,6 +193,38 @@ function normalizeScene(value: unknown): FanficPlanScene {
     requiredScenes: value.requiredScenes,
     canonConstraints: value.canonConstraints,
     emotionalTurn: value.emotionalTurn,
+    narrativeStrategy,
+  };
+}
+
+function normalizeNarrativeStrategy(
+  value: unknown,
+  scene: Omit<FanficPlanScene, "narrativeStrategy">,
+): FanficNarrativeStrategy {
+  const fallback = buildDefaultNarrativeStrategy(scene);
+  if (!isRecord(value)) return fallback;
+
+  return {
+    purpose: readOptionalString(value.purpose) ?? fallback.purpose,
+    viewpointDistance: readOptionalString(value.viewpointDistance) ?? fallback.viewpointDistance,
+    emotionCarriers: readOptionalStringArray(value.emotionCarriers) ?? fallback.emotionCarriers,
+    surfaceSignals: readOptionalStringArray(value.surfaceSignals) ?? fallback.surfaceSignals,
+    withheldInterior: readOptionalStringArray(value.withheldInterior) ?? fallback.withheldInterior,
+    antiClicheMoves: readOptionalStringArray(value.antiClicheMoves) ?? fallback.antiClicheMoves,
+    closingMove: readOptionalString(value.closingMove) ?? fallback.closingMove,
+  };
+}
+
+function buildDefaultNarrativeStrategy(scene: Omit<FanficPlanScene, "narrativeStrategy">): FanficNarrativeStrategy {
+  const carriers = [...scene.requiredScenes, ...scene.beats.slice(0, 2)].filter(Boolean);
+  return {
+    purpose: `让「${scene.title}」的${scene.emotionalTurn}通过可见细节被读者看见，而不是由作者解释。`,
+    viewpointDistance: "半贴身",
+    emotionCarriers: carriers.length > 0 ? carriers : [scene.title],
+    surfaceSignals: ["停顿", "视线", "手上动作", "环境声"],
+    withheldInterior: ["不解释真正心意", "不替读者总结关系"],
+    antiClicheMoves: ["避免直白心理", "避免金句式煽情", "避免俗套比喻"],
+    closingMove: "用动作、物件或日常一句话克制收束。",
   };
 }
 
@@ -226,6 +291,16 @@ function assertStringArray(value: unknown, field: string): asserts value is stri
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || item.trim() === "")) {
     throw new Error("Invalid fanfic short plan: " + field + " must be a string array");
   }
+}
+
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+function readOptionalStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const items = value.filter((item): item is string => typeof item === "string" && item.trim() !== "");
+  return items.length > 0 ? items : undefined;
 }
 
 function assertPositiveNumber(value: unknown, field: string): asserts value is number {

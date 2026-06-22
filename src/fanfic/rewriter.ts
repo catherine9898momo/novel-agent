@@ -38,6 +38,8 @@ function buildUserPrompt(context: FanficWriterContext, draft: string, review: Fa
   return [
     "请根据 reviewBrief 和 issues 改写草稿。",
     "必须保留 requiredScenes，requiredScenes 中的每个原文短语尽量完整出现在正文里；遵守 avoidChecks。",
+    "必须对照 plan.scenes[].narrativeStrategy 修复：删去解释性心理和作者总结，补入可见动作或物件，保留 withheldInterior 的留白，按 closingMove 压低结尾。",
+    "不得为了执行 narrativeStrategy 改动 CP、时间线、canon facts 或 requiredScenes。",
     "",
     "## Writer Context",
     JSON.stringify(context, null, 2),

@@ -617,6 +617,29 @@
       white-space: pre-wrap;
     }
 
+    .artifact-content-grid {
+      grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+      align-items: stretch;
+    }
+
+    .artifact-sidebar {
+      max-height: calc(100vh - 210px);
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .final-document {
+      min-height: min(72vh, 900px);
+      max-height: calc(100vh - 190px);
+      overflow: auto;
+      padding: 30px clamp(24px, 4vw, 56px);
+      background: rgba(255, 252, 245, 0.86);
+      font-size: 18px;
+      line-height: 2;
+      overflow-wrap: anywhere;
+      overscroll-behavior: contain;
+    }
+
     .checklist {
       display: grid;
       gap: 9px;
@@ -976,8 +999,8 @@
         </div>
 
         <div class="tab-content" id="tab-artifacts">
-          <div class="content-grid">
-            <div>
+          <div class="content-grid artifact-content-grid">
+            <div class="artifact-sidebar">
               <h2 class="panel-title">产物摘要</h2>
               <p class="panel-subtitle">查看当前 workflow 已生成的文件路径和终稿内容。</p>
               <div class="action-row" style="margin: 10px 0 12px;">
@@ -985,7 +1008,7 @@
               </div>
               <div class="artifact-list" id="artifactList"></div>
             </div>
-            <div class="document" id="finalDoc">终稿将在审阅 / 改写后由人工接受。</div>
+            <div class="document final-document" id="finalDoc">终稿将在审阅 / 改写后由人工接受。</div>
           </div>
         </div>
       </section>
@@ -1197,6 +1220,7 @@
       updateActionAvailability();
       if (!value) {
         updateGate();
+        renderWorkflow();
       }
     }
 
@@ -1219,11 +1243,6 @@
 
     function applySnapshot(nextSnapshot) {
       snapshot = nextSnapshot;
-      renderStoryCard();
-      renderPlan();
-      renderDraft();
-      renderReview();
-      renderFinal();
       renderArtifacts();
       renderWorkflow();
     }
@@ -1501,6 +1520,34 @@
       $("storyCardPanel").classList.toggle("stage-hidden", stage !== "story");
       $("outputPanel").classList.toggle("stage-hidden", !stageTabs[stage]);
       if (stageTabs[stage]) switchTab(stageTabs[stage]);
+      renderVisibleStageContent(stage);
+    }
+
+    function renderVisibleStageContent(stage = displayStage()) {
+      if (stage === "idea") {
+        renderStoryCard();
+        return;
+      }
+      if (stage === "story") {
+        renderStoryCard();
+        return;
+      }
+      if (stage === "plan") {
+        renderPlan();
+        return;
+      }
+      if (stage === "draft") {
+        renderDraft();
+        return;
+      }
+      if (stage === "review") {
+        renderReview();
+        return;
+      }
+      if (stage === "final" || stage === "artifacts") {
+        renderFinal();
+        return;
+      }
     }
 
     function updateActionAvailability() {
@@ -1664,11 +1711,8 @@
       snapshot = null;
       lastError = "";
       clearStoryCard();
-      renderPlan();
-      renderDraft();
-      renderReview();
-      renderFinal();
       renderArtifacts();
+      renderWorkflow();
       await startSession({ fresh: true, preserveIdeaText: true });
     }
 

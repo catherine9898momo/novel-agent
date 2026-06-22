@@ -26,4 +26,28 @@ describe("fanfic UI HTML interactions", () => {
     expect(script).toContain("/api/fanfic/story-card");
     expect(script).toContain("saveStoryCardEdit");
   });
+
+  it("执行结束后会重新渲染 workflow，避免状态停在执行中", () => {
+    expect(script).toMatch(/if \(!value\) \{[\s\S]*?renderWorkflow\(\);[\s\S]*?\}/);
+  });
+
+  it("snapshot 应只渲染当前可见阶段，避免长正文反复重排", () => {
+    expect(script).toContain("renderVisibleStageContent");
+    const applySnapshotBody = script.match(/function applySnapshot\(nextSnapshot\) \{([\s\S]*?)\n    \}/)?.[1] ?? "";
+    expect(applySnapshotBody).not.toContain("renderDraft();");
+    expect(applySnapshotBody).not.toContain("renderFinal();");
+  });
+
+  it("终稿长文本不使用 content-visibility 懒绘制，避免快速滚动白屏", () => {
+    expect(html).not.toContain("content-visibility: auto");
+    expect(html).not.toContain("contain-intrinsic-size");
+    expect(html).toContain("finalDoc");
+    expect(html).toContain("overflow: auto");
+  });
+
+  it("产物页使用窄摘要宽正文布局，提高终稿阅读空间利用率", () => {
+    expect(html).toContain("artifact-content-grid");
+    expect(html).toContain("grid-template-columns: minmax(220px, 320px) minmax(0, 1fr)");
+    expect(html).toContain("final-document");
+  });
 });

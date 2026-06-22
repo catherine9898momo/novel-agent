@@ -48,6 +48,8 @@ function buildUserPrompt(context: FanficWriterContext): string {
     "- 字数至少达到 targetWordCount 的 60%。",
     "- 避免 avoidChecks 中的问题。",
     "- 按 plan.scenes 顺序推进，并体现核心 beats。",
+    "- 执行每个 scene 的 narrativeStrategy：先判断本场情绪如何被看见，再用动作、物件、闲话或环境声表达；不得用作者解释替代。",
+    "- narrativeStrategy 低于 requiredScenes、canonConstraints、avoidChecks 的优先级，但必须尽量同时满足。",
     "",
     JSON.stringify(context, null, 2),
   ].join("\n");
