@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "id": "chang-gong-zhu",
+    "title": "长公主病入膏肓后",
+    "sourcePath": "downloads/《长公主病入膏肓后》作者：晏闲.txt",
+    "importedAt": "2026-06-27T18:02:40.476Z",
+    "wordCount": 506698,
+    "chapterCount": 111
+  },
+  "collection": "reusable_materials.character_archetype",
+  "count": 4,
+  "items": [
+    {
+      "id": "character-e5aea3e6988ee78fa0",
+      "kind": "character_archetype",
+      "label": "核心主角：宣明珠",
+      "pattern": "外部评价和目标阻碍下仍追求在压力中争取主动权的人物模型。",
+      "tags": [
+        "人物",
+        "核心主角"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "大晋永淳三年春，长公主府大设华筵。",
+        "宴会的后半场，作为寿星的宣明珠没再露面。",
+        "昨晚他在衙署宿直，加上前日晚上被拒之门外，算来确有两整日不曾见过宣明珠了，怪不得会梦到她生气。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    },
+    {
+      "id": "character-e6a285e9b9a4e5baad",
+      "kind": "character_archetype",
+      "label": "关键关系对象：梅鹤庭",
+      "pattern": "外部评价和目标阻碍下仍追求在压力中争取主动权的人物模型。",
+      "tags": [
+        "人物",
+        "关键关系对象"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "梅鹤庭，昔年帝师的亲传学生，晋明帝钦点的探花郎，身上那股子清冷禁绝的劲儿，啧，真是勾人。",
+        "黄昏宴席散场，梅鹤庭倒过来了，但长公主寝殿的雕花门阖着，将他拦在外面。",
+        "大理寺后衙的一间简舍内，枕臂伏睡在书案的梅鹤庭猛然惊醒。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    },
+    {
+      "id": "character-e5b494e5acb7e5acb7",
+      "kind": "character_archetype",
+      "label": "配角/支线角色：崔嬷嬷",
+      "pattern": "外部评价和目标阻碍下仍追求证明自身能力并掌握命运的人物模型。",
+      "tags": [
+        "人物",
+        "配角/支线角色"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "公主心中压着一股子气，崔嬷嬷知道，是气驸马没为她准备生辰礼，又不愿拉下脸去提醒，正闹着别扭。",
+        "崔嬷嬷心里抽凛子一寒。",
+        "一直紧盯着三位太医神情变化的崔嬷嬷，当场堕了泪。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    },
+    {
+      "id": "character-e591a8e5a4aae58cbb",
+      "kind": "character_archetype",
+      "label": "配角/支线角色：周太医",
+      "pattern": "外部评价和目标阻碍下仍追求证明自身能力并掌握命运的人物模型。",
+      "tags": [
+        "人物",
+        "配角/支线角色"
+      ],
+      "sourceChapters": [
+        3
+      ],
+      "evidence": [
+        "歇息不一时，杨太医入府请脉，随行的还有尚药局前掌司林铉，以及一位专攻气血疑症的周太医。",
+        "周太医背着药箱自后门入府，一路有下人为他撑伞, 匆匆然来到鸣皋苑, 但见廊下灯笼通明如昼, 侍女肃容，仿佛严阵以待着什么。",
+        "太医来了，柏木制的药箱几乎要颠碎周太医后脊的骨头。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    }
+  ]
+}

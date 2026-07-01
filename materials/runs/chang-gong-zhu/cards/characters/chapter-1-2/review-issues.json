@@ -1,0 +1,131 @@
+[
+  {
+    "code": "candidate_not_character",
+    "characterName": "时间",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 时间",
+    "value": "时间"
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "过来",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 过来",
+    "value": "过来"
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "点头",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 点头",
+    "value": "点头"
+  },
+  {
+    "code": "candidate_duplicate_alias",
+    "characterName": "鹤庭",
+    "message": "candidate is covered by a fuller canonical character name: 梅鹤庭",
+    "value": {
+      "candidate": "鹤庭",
+      "canonicalName": "梅鹤庭"
+    }
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "口气",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 口气",
+    "value": "口气"
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "摇头",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 摇头",
+    "value": "摇头"
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "下来",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 下来",
+    "value": "下来"
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "转头",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 转头",
+    "value": "转头"
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "驸马",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 驸马",
+    "value": "驸马"
+  },
+  {
+    "code": "candidate_not_character",
+    "characterName": "回来",
+    "message": "candidate looks like an action, title, time word, or common phrase rather than a character: 回来",
+    "value": "回来"
+  },
+  {
+    "code": "alias_truncated",
+    "characterName": "宣明珠",
+    "message": "removed truncated alias 大长公; use 大长公主 when supported by evidence",
+    "value": "大长公"
+  },
+  {
+    "code": "alias_truncated",
+    "characterName": "宣明珠",
+    "message": "removed truncated alias 公主殿; use 公主殿下 when supported by evidence",
+    "value": "公主殿"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "崔嬷嬷",
+    "message": "coreDesire is empty or too generic for a reusable material card",
+    "value": "证明自身能力并掌握命运"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "崔嬷嬷",
+    "message": "corePressure is empty or too generic for a reusable material card",
+    "value": "外部评价和目标阻碍"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "姜瑾",
+    "message": "corePressure is empty or too generic for a reusable material card",
+    "value": "外部评价和目标阻碍"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "宝鸦",
+    "message": "corePressure is empty or too generic for a reusable material card",
+    "value": "外部评价和目标阻碍"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "杨太医",
+    "message": "coreDesire is empty or too generic for a reusable material card",
+    "value": "证明自身能力并掌握命运"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "杨太医",
+    "message": "corePressure is empty or too generic for a reusable material card",
+    "value": "外部评价和目标阻碍"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "阿娘",
+    "message": "corePressure is empty or too generic for a reusable material card",
+    "value": "外部评价和目标阻碍"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "乐长公",
+    "message": "corePressure is empty or too generic for a reusable material card",
+    "value": "外部评价和目标阻碍"
+  },
+  {
+    "code": "generic_character_field",
+    "characterName": "澄儿",
+    "message": "corePressure is empty or too generic for a reusable material card",
+    "value": "外部评价和目标阻碍"
+  }
+]

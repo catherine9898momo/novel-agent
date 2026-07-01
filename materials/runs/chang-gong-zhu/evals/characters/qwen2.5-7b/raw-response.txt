@@ -1,0 +1,103 @@
+{
+  "characters": [
+    {
+      "name": "宣明珠",
+      "aliases": ["明珠", "长公主", "大长公主", "大长公", "殿下", "公主", "公主殿"],
+      "role": "lead",
+      "function": "",
+      "motivation": "在压力中争取主动权",
+      "relationships": [
+        "梅鹤庭：旧情破裂"
+      ],
+      "evidence": [
+        "大晋永淳三年春，长公主府大设华筵。",
+        "宴会的后半场，作为寿星的宣明珠没再露面。",
+        "公主心中压着一股子气，崔嬷嬷知道，是气驸马没为她准备生辰礼，又不愿拉下脸去提醒，正闹着别扭。"
+      ],
+      "sourceCharacterNames": []
+    },
+    {
+      "name": "梅鹤庭",
+      "aliases": ["长生", "梅长生", "梅大人"],
+      "role": "antagonist",
+      "function": "",
+      "motivation": "",
+      "relationships": [
+        "宣明珠：旧情破裂"
+      ],
+      "evidence": [
+        "梅鹤庭，昔年帝师的亲传学生，晋明帝钦点的探花郎，身上那股子清冷禁绝的劲儿，啧，真是勾人。",
+        "黄昏宴席散场，梅鹤庭倒过来了，但长公主寝殿的雕花门阖着，将他拦在外面。"
+      ],
+      "sourceCharacterNames": []
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "name": "崔嬷嬷",
+      "aliases": ["崔大人"],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "证明自身能力并掌握命运",
+      "pressure": "外部评价和目标阻碍",
+      "firstSeenChapter": 1,
+      "appearanceChapters": [1, 2, 3, 5, 10, 11, 14, 15],
+      "evidence": [
+        "公主心中压着一股子气，崔嬷嬷知道，是气驸马没为她准备生辰礼，又不愿拉下脸去提醒，正闹着别扭。",
+        "崔嬷嬷心里抽凛子一寒。"
+      ],
+      "sourceCharacterNames": []
+    },
+    {
+      "name": "周太医",
+      "aliases": ["周大人"],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "证明自身能力并掌握命运",
+      "pressure": "外部评价和目标阻碍",
+      "firstSeenChapter": 3,
+      "appearanceChapters": [3, 21, 26, 27, 28, 42, 44, 45],
+      "evidence": [
+        "歇息不一时，杨太医入府请脉，随行的还有尚药局前掌司林铉，以及一位专攻气血疑症的周太医。",
+        "周太医背着药箱自后门入府，一路有下人为他撑伞, 匆匆然来到鸣皋苑, 但见廊下灯笼通明如昼, 侍女肃容，仿佛严阵以待着什么。"
+      ],
+      "sourceCharacterNames": []
+    },
+    {
+      "name": "姜瑾",
+      "aliases": [],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "在压力中争取主动权",
+      "pressure": "外部评价和目标阻碍",
+      "firstSeenChapter": 2,
+      "appearanceChapters": [2, 16, 17, 19, 21, 22, 24, 25],
+      "evidence": [
+        "跟着他的姜瑾是梅鹤庭的得力亲信，见状心里发急：公主殿下不开门，郎君你也不会上去敲敲门，说句软话吗？",
+        "所以这处院落，他的亲信姜瑾可以随时出入，宣明珠却不行。"
+      ],
+      "sourceCharacterNames": []
+    },
+    {
+      "name": "杨珂芝",
+      "aliases": ["珂芝"],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "在压力中争取主动权",
+      "pressure": "外部评价和目标阻碍",
+      "firstSeenChapter": 3,
+      "appearanceChapters": [3, 4, 5, 14, 16, 21, 29, 58],
+      "evidence": [
+        "她知道这不过是杨珂芝不想嫁人的借口，却也有一妙用——成了许多薄情男子的照妖镜。",
+        "杨珂芝注视着和记忆中几乎没变的那张脸，神情几经变化，双眼也闪出水光来。"
+      ],
+      "sourceCharacterNames": []
+    },
+    {
+      "name": "宝鸦",
+      "aliases": [],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "在压力中争取主动权",
+      "pressure": "外部评价和目标阻碍",
+      "firstSeenChapter": 1

@@ -1,0 +1,1189 @@
+[
+  {
+    "id": "chang-gong-zhu:window:1-5:opening_arc",
+    "chapterRange": "1-5",
+    "chapterNumbers": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "kind": "opening_arc",
+    "title": "小故事：觉   这七年，原是她一厢情愿。",
+    "summary": "小故事：觉   这七年，原是她一厢情愿。：在第 1-8 章，宣明珠、梅鹤庭、杨珂芝、宝鸦处在「“本宫可有恙？」的情境中，故事围绕建立开局困境、核心人物压力和继续阅读期待展开。宣明珠、梅鹤庭、杨珂芝、宝鸦、阿娘先经历「“本宫可有恙；宣明珠与梅鹤庭之间的信息差开始缩小」，随后围绕连续事件推进。这一段通过「用专业能力解决危机，形成能力高光。」给出阶段性回报，让宣明珠、梅鹤庭、杨珂芝的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "“启禀长公主殿下，殿下脉象，与当年柔嘉太皇太后的病症……颇为相似。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "杨珂芝",
+      "宝鸦",
+      "阿娘",
+      "皇帝"
+    ],
+    "startReason": "第 1 章：建立开局困境、核心人物压力和继续阅读期待",
+    "endReason": "第 5 章：宣明珠见了这碗苦药汤，没奈何，蹙眉接过白瓷碗一口气喝下。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-1"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:6-8:mini_arc",
+    "chapterRange": "6-8",
+    "chapterNumbers": [
+      6,
+      7,
+      8
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：觉   这七年，原是她一厢情愿。（续 2）",
+    "summary": "小故事：觉   这七年，原是她一厢情愿。：在第 1-8 章，宣明珠、梅鹤庭、杨珂芝、宝鸦处在「“本宫可有恙？」的情境中，故事围绕建立开局困境、核心人物压力和继续阅读期待展开。宣明珠、梅鹤庭、杨珂芝、宝鸦、阿娘先经历「“本宫可有恙；宣明珠与梅鹤庭之间的信息差开始缩小」，随后围绕连续事件推进。这一段通过「用专业能力解决危机，形成能力高光。」给出阶段性回报，让宣明珠、梅鹤庭、杨珂芝的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "“启禀长公主殿下，殿下脉象，与当年柔嘉太皇太后的病症……颇为相似。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "杨珂芝",
+      "宝鸦",
+      "阿娘",
+      "皇帝"
+    ],
+    "startReason": "第 6 章：推进关系变化，让行动替代解释",
+    "endReason": "第 8 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-1"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:9-13:mini_arc",
+    "chapterRange": "9-13",
+    "chapterNumbers": [
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：醒   本宫，要休驸马",
+    "summary": "小故事：醒   本宫，要休驸马：在第 9-16 章，宣明珠、梅鹤庭、鹤庭、驸马处在「成玉懵然，她从小与宣明珠互别苗头长到这么大，说不准她吃亏的时候还更多些。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、鹤庭、驸马、言淮先经历「成玉懵然，她从小与宣明珠互别苗头长到这么大，说不准她吃亏的时候还更多些；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「成玉竟不敢与那双森黑的眸子对视，心头费解：梅鹤庭不是一惯不喜宣明珠吗，为何今日如此护着她？」给出阶段性回报，让宣明珠、梅鹤庭、鹤庭的处境发生变化，并在结尾留下「”少年拔足狂追」作为下一段牵引。",
+    "mainConflict": "还是勉强宿在了偏殿，不肯与她同床。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "言淮"
+    ],
+    "startReason": "第 9 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 13 章：他竟不知，她喜欢的从来都是桃花。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-2"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:14-16:mini_arc",
+    "chapterRange": "14-16",
+    "chapterNumbers": [
+      14,
+      15,
+      16
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：醒   本宫，要休驸马（续 2）",
+    "summary": "小故事：醒   本宫，要休驸马：在第 9-16 章，宣明珠、梅鹤庭、鹤庭、驸马处在「成玉懵然，她从小与宣明珠互别苗头长到这么大，说不准她吃亏的时候还更多些。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、鹤庭、驸马、言淮先经历「成玉懵然，她从小与宣明珠互别苗头长到这么大，说不准她吃亏的时候还更多些；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「成玉竟不敢与那双森黑的眸子对视，心头费解：梅鹤庭不是一惯不喜宣明珠吗，为何今日如此护着她？」给出阶段性回报，让宣明珠、梅鹤庭、鹤庭的处境发生变化，并在结尾留下「”少年拔足狂追」作为下一段牵引。",
+    "mainConflict": "还是勉强宿在了偏殿，不肯与她同床。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "言淮"
+    ],
+    "startReason": "第 14 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 16 章：”少年拔足狂追。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-2"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:17-21:mini_arc",
+    "chapterRange": "17-21",
+    "chapterNumbers": [
+      17,
+      18,
+      19,
+      20,
+      21
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：念   “是臣错了。”",
+    "summary": "小故事：念   “是臣错了。”：在第 17-24 章，宣明珠、梅鹤庭、澄儿、鹤庭处在「书房中一时无声。」的情境中，故事围绕推进关系变化，让行动替代解释展开。宣明珠、梅鹤庭、澄儿、鹤庭、下来先经历「书房中一时无声；宣明珠与梅鹤庭之间的信息差开始缩小」，随后围绕连续事件推进。这一段通过「通过行动变化释放一个小回报。」给出阶段性回报，让宣明珠、梅鹤庭、澄儿的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "因为是恩师的临终之物，梅鹤庭不肯。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "澄儿"
+    ],
+    "startReason": "第 17 章：推进关系变化，让行动替代解释",
+    "endReason": "第 21 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-3"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:22-24:mini_arc",
+    "chapterRange": "22-24",
+    "chapterNumbers": [
+      22,
+      23,
+      24
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：念   “是臣错了。”（续 2）",
+    "summary": "小故事：念   “是臣错了。”：在第 17-24 章，宣明珠、梅鹤庭、澄儿、鹤庭处在「书房中一时无声。」的情境中，故事围绕推进关系变化，让行动替代解释展开。宣明珠、梅鹤庭、澄儿、鹤庭、下来先经历「书房中一时无声；宣明珠与梅鹤庭之间的信息差开始缩小」，随后围绕连续事件推进。这一段通过「通过行动变化释放一个小回报。」给出阶段性回报，让宣明珠、梅鹤庭、澄儿的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "因为是恩师的临终之物，梅鹤庭不肯。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "澄儿"
+    ],
+    "startReason": "第 22 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 24 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-3"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:25-29:mini_arc",
+    "chapterRange": "25-29",
+    "chapterNumbers": [
+      25,
+      26,
+      27,
+      28,
+      29
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：小火   她一口血直喷在他脸上",
+    "summary": "小故事：小火   她一口血直喷在他脸上：在第 25-32 章，宣明珠、梅鹤庭、崔嬷嬷、周太医处在「皇帝方得信不久, 可笑的是御史中丞慌忙便来上书，说：长公主恐因休离之事，心神大受刺激，不止要拆司天台, 恐怕还要拆了晋明皇帝所筑的万国天枢！」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、崔嬷嬷、周太医、姜瑾先经历「皇帝方得信不久, 可笑的是御史中丞慌忙便来上书，说：长公主恐因休离之事，心神大受刺激，不止要拆司天台, 恐怕还要拆了晋明皇帝所筑的万国天枢；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「皇帝是个护短的，观星楼倒就倒了, 他反而担心推楼的人手疼，站身在细墁金砖的地心急得直转圈。」给出阶段性回报，让宣明珠、梅鹤庭、崔嬷嬷的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "崔嬷嬷",
+      "周太医",
+      "姜瑾",
+      "皇帝"
+    ],
+    "startReason": "第 25 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 29 章：不成想梅鹤庭还在外头。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-4"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:30-32:mini_arc",
+    "chapterRange": "30-32",
+    "chapterNumbers": [
+      30,
+      31,
+      32
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：小火   她一口血直喷在他脸上（续 2）",
+    "summary": "小故事：小火   她一口血直喷在他脸上：在第 25-32 章，宣明珠、梅鹤庭、崔嬷嬷、周太医处在「皇帝方得信不久, 可笑的是御史中丞慌忙便来上书，说：长公主恐因休离之事，心神大受刺激，不止要拆司天台, 恐怕还要拆了晋明皇帝所筑的万国天枢！」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、崔嬷嬷、周太医、姜瑾先经历「皇帝方得信不久, 可笑的是御史中丞慌忙便来上书，说：长公主恐因休离之事，心神大受刺激，不止要拆司天台, 恐怕还要拆了晋明皇帝所筑的万国天枢；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「皇帝是个护短的，观星楼倒就倒了, 他反而担心推楼的人手疼，站身在细墁金砖的地心急得直转圈。」给出阶段性回报，让宣明珠、梅鹤庭、崔嬷嬷的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "崔嬷嬷",
+      "周太医",
+      "姜瑾",
+      "皇帝"
+    ],
+    "startReason": "第 30 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 32 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-4"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:33-37:mini_arc",
+    "chapterRange": "33-37",
+    "chapterNumbers": [
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 33 章   无字碑（二合一）……",
+    "summary": "小故事：第 33 章   无字碑（二合一）……：在第 33-40 章，宣明珠、梅鹤庭、宝鸦、鹤庭处在「永淳朝的朝制为逢五休沐, 这日一早，梅鹤庭出门时，正遇上一个光头的小厮在二门外啜泣。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、鹤庭、下去先经历「永淳朝的朝制为逢五休沐, 这日一早，梅鹤庭出门时，正遇上一个光头的小厮在二门外啜泣；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「与此同时，接到梅少卿请柬的一班大理寺同僚，早早便来到了护国寺。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「梅鹤庭于今死了，从此以后，世上只有梅长生」作为下一段牵引。",
+    "mainConflict": "神情倒很矜持，起初不肯叫人，被百般逗弄不过，忍无可忍道：“舅舅好坏！",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "方子",
+      "梅豫",
+      "母亲"
+    ],
+    "startReason": "第 33 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 37 章：有时想想，自己小时皮是皮了点，好似也没这些古怪念头，至于那个人，克己复礼，更不会了，所以她偶尔也犯嘀咕，不知这孩子究竟随了谁。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-5"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:38-40:mini_arc",
+    "chapterRange": "38-40",
+    "chapterNumbers": [
+      38,
+      39,
+      40
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 33 章   无字碑（二合一）……（续 2）",
+    "summary": "小故事：第 33 章   无字碑（二合一）……：在第 33-40 章，宣明珠、梅鹤庭、宝鸦、鹤庭处在「永淳朝的朝制为逢五休沐, 这日一早，梅鹤庭出门时，正遇上一个光头的小厮在二门外啜泣。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、鹤庭、下去先经历「永淳朝的朝制为逢五休沐, 这日一早，梅鹤庭出门时，正遇上一个光头的小厮在二门外啜泣；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「与此同时，接到梅少卿请柬的一班大理寺同僚，早早便来到了护国寺。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「梅鹤庭于今死了，从此以后，世上只有梅长生」作为下一段牵引。",
+    "mainConflict": "神情倒很矜持，起初不肯叫人，被百般逗弄不过，忍无可忍道：“舅舅好坏！",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "方子",
+      "梅豫",
+      "母亲"
+    ],
+    "startReason": "第 38 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 40 章：梅鹤庭于今死了，从此以后，世上只有梅长生。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-5"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:41-45:mini_arc",
+    "chapterRange": "41-45",
+    "chapterNumbers": [
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 41 章   罪臣之今日，便是梅氏之……",
+    "summary": "小故事：第 41 章   罪臣之今日，便是梅氏之……：在第 41-48 章，宣明珠、梅鹤庭、崔嬷嬷、姜瑾处在「梅鹤庭上次来行宫, 是向她作了保的，会在皇帝大婚前将京中的异党料理干净。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、崔嬷嬷、姜瑾、醋醋先经历「梅鹤庭上次来行宫, 是向她作了保的，会在皇帝大婚前将京中的异党料理干净；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「长公主虽然莅临月旦评，然而那顶宝帷停在最显赫的广场上，四围精甲侍卫护守，垂堆的重重紫纱百无聊籁地随风轻动，却始终没有掀起。」给出阶段性回报，让宣明珠、梅鹤庭、崔嬷嬷的处境发生变化，并在结尾留下「步下凤辇的宣明珠瞥下眼眸，淡淡望着人跪拐不跪的老妪」作为下一段牵引。",
+    "mainConflict": "哪怕听闻江琮告病致仕也无反应，只问了句，“狄师兄可有动静？",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "崔嬷嬷",
+      "姜瑾",
+      "醋醋",
+      "皇帝",
+      "阿姐"
+    ],
+    "startReason": "第 41 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 45 章：脸色无比苍白。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-6"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:46-48:mini_arc",
+    "chapterRange": "46-48",
+    "chapterNumbers": [
+      46,
+      47,
+      48
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 41 章   罪臣之今日，便是梅氏之……（续 2）",
+    "summary": "小故事：第 41 章   罪臣之今日，便是梅氏之……：在第 41-48 章，宣明珠、梅鹤庭、崔嬷嬷、姜瑾处在「梅鹤庭上次来行宫, 是向她作了保的，会在皇帝大婚前将京中的异党料理干净。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、崔嬷嬷、姜瑾、醋醋先经历「梅鹤庭上次来行宫, 是向她作了保的，会在皇帝大婚前将京中的异党料理干净；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「长公主虽然莅临月旦评，然而那顶宝帷停在最显赫的广场上，四围精甲侍卫护守，垂堆的重重紫纱百无聊籁地随风轻动，却始终没有掀起。」给出阶段性回报，让宣明珠、梅鹤庭、崔嬷嬷的处境发生变化，并在结尾留下「步下凤辇的宣明珠瞥下眼眸，淡淡望着人跪拐不跪的老妪」作为下一段牵引。",
+    "mainConflict": "哪怕听闻江琮告病致仕也无反应，只问了句，“狄师兄可有动静？",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "崔嬷嬷",
+      "姜瑾",
+      "醋醋",
+      "皇帝",
+      "阿姐"
+    ],
+    "startReason": "第 46 章：推进关系变化，让行动替代解释",
+    "endReason": "第 48 章：步下凤辇的宣明珠瞥下眼眸，淡淡望着人跪拐不跪的老妪。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-6"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:49-53:mini_arc",
+    "chapterRange": "49-53",
+    "chapterNumbers": [
+      49,
+      50,
+      51,
+      52,
+      53
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 49 章   冲喜的意思",
+    "summary": "小故事：第 49 章   冲喜的意思：在第 49-56 章，宣明珠、梅鹤庭、崔嬷嬷、周太医处在「“白姑姑, 还不快将陆太夫人扶起来。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、崔嬷嬷、周太医、宝鸦先经历「“白姑姑, 还不快将陆太夫人扶起来；宣明珠与宝鸦从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「姨母虽能给她庇护，可她还是想回到母亲生前的地方，守着她魂兮归来。」给出阶段性回报，让宣明珠、梅鹤庭、崔嬷嬷的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "崔嬷嬷",
+      "周太医",
+      "宝鸦",
+      "陆太夫"
+    ],
+    "startReason": "第 49 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 53 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-7"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:54-56:mini_arc",
+    "chapterRange": "54-56",
+    "chapterNumbers": [
+      54,
+      55,
+      56
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 49 章   冲喜的意思（续 2）",
+    "summary": "小故事：第 49 章   冲喜的意思：在第 49-56 章，宣明珠、梅鹤庭、崔嬷嬷、周太医处在「“白姑姑, 还不快将陆太夫人扶起来。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、崔嬷嬷、周太医、宝鸦先经历「“白姑姑, 还不快将陆太夫人扶起来；宣明珠与宝鸦从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「姨母虽能给她庇护，可她还是想回到母亲生前的地方，守着她魂兮归来。」给出阶段性回报，让宣明珠、梅鹤庭、崔嬷嬷的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "崔嬷嬷",
+      "周太医",
+      "宝鸦",
+      "陆太夫"
+    ],
+    "startReason": "第 54 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 56 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-7"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:57-61:mini_arc",
+    "chapterRange": "57-61",
+    "chapterNumbers": [
+      57,
+      58,
+      59,
+      60,
+      61
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 57 章   仍是那世间最得意的女子",
+    "summary": "小故事：第 57 章   仍是那世间最得意的女子：在第 57-64 章，宣明珠、梅鹤庭、杨珂芝、宝鸦处在「京郊东南十五里的嵩麓山腰上, 依岩洞之势有一所竹子搭建成的药庐，尚药局前掌司林铉致仕后，隐居在此将有十个年头了。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、杨珂芝、宝鸦、时间先经历「京郊东南十五里的嵩麓山腰上, 依岩洞之势有一所竹子搭建成的药庐，尚药局前掌司林铉致仕后，隐居在此将有十个年头了；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「可，人都得护短不是么，把话说回来，要不是因为这帮子庸医误诊，长公主能吃这么些苦么，公子能受这么些罪么？」给出阶段性回报，让宣明珠、梅鹤庭、杨珂芝的处境发生变化，并在结尾留下「那三条丝带，最终都湿了个透……」作为下一段牵引。",
+    "mainConflict": "再好生想想，这辈子你便没逆心给人看错过病，抓错过药？",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "杨珂芝",
+      "宝鸦",
+      "法染",
+      "梅珩"
+    ],
+    "startReason": "第 57 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 61 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-8"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:62-64:mini_arc",
+    "chapterRange": "62-64",
+    "chapterNumbers": [
+      62,
+      63,
+      64
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 57 章   仍是那世间最得意的女子（续 2）",
+    "summary": "小故事：第 57 章   仍是那世间最得意的女子：在第 57-64 章，宣明珠、梅鹤庭、杨珂芝、宝鸦处在「京郊东南十五里的嵩麓山腰上, 依岩洞之势有一所竹子搭建成的药庐，尚药局前掌司林铉致仕后，隐居在此将有十个年头了。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、杨珂芝、宝鸦、时间先经历「京郊东南十五里的嵩麓山腰上, 依岩洞之势有一所竹子搭建成的药庐，尚药局前掌司林铉致仕后，隐居在此将有十个年头了；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「可，人都得护短不是么，把话说回来，要不是因为这帮子庸医误诊，长公主能吃这么些苦么，公子能受这么些罪么？」给出阶段性回报，让宣明珠、梅鹤庭、杨珂芝的处境发生变化，并在结尾留下「那三条丝带，最终都湿了个透……」作为下一段牵引。",
+    "mainConflict": "再好生想想，这辈子你便没逆心给人看错过病，抓错过药？",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "杨珂芝",
+      "宝鸦",
+      "法染",
+      "梅珩"
+    ],
+    "startReason": "第 62 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 64 章：那三条丝带，最终都湿了个透……",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-8"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:65-69:mini_arc",
+    "chapterRange": "65-69",
+    "chapterNumbers": [
+      65,
+      66,
+      67,
+      68,
+      69
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 65 章   羞耻",
+    "summary": "小故事：第 65 章   羞耻：在第 65-72 章，宣明珠、梅鹤庭、宝鸦、余小七处在「梅长生猛地从梦中惊醒。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、余小七、柳息壤先经历「梅长生猛地从梦中惊醒；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「迎宵等护卫识得眼色，不远不近地守在后头不去打扰。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "余小七",
+      "柳息壤",
+      "杨青昭"
+    ],
+    "startReason": "第 65 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 69 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-9"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:70-72:mini_arc",
+    "chapterRange": "70-72",
+    "chapterNumbers": [
+      70,
+      71,
+      72
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 65 章   羞耻（续 2）",
+    "summary": "小故事：第 65 章   羞耻：在第 65-72 章，宣明珠、梅鹤庭、宝鸦、余小七处在「梅长生猛地从梦中惊醒。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、余小七、柳息壤先经历「梅长生猛地从梦中惊醒；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「迎宵等护卫识得眼色，不远不近地守在后头不去打扰。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "余小七",
+      "柳息壤",
+      "杨青昭"
+    ],
+    "startReason": "第 70 章：承接上一章问题，并制造新的行动目标",
+    "endReason": "第 72 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-9"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:73-77:mini_arc",
+    "chapterRange": "73-77",
+    "chapterNumbers": [
+      73,
+      74,
+      75,
+      76,
+      77
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 73 章   倒反天罡",
+    "summary": "小故事：第 73 章   倒反天罡：在第 73-80 章，宣明珠、梅鹤庭、鹤庭、阿姐处在「有人一夜未眠, 有人一夜无梦。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、鹤庭、阿姐、言淮先经历「有人一夜未眠, 有人一夜无梦；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「梅穆平当场运了一脑门子气，拍案低喝：“梅长生，好好，你如今成了天子近臣，这么盆污水说扣便扣到我头上！」给出阶段性回报，让宣明珠、梅鹤庭、鹤庭的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "不要那些孟浪乱梦恼人时, 它偏偏不期而至, 可当他需要这梦境助他一臂之力, 却又成了留不住的鸿泥雪爪，不肯遂他的愿。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "阿姐",
+      "言淮",
+      "出去",
+      "这个",
+      "着他"
+    ],
+    "startReason": "第 73 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 77 章：没有灯，她无法看清他的脸，可这个困兽一样的人，用着梅鹤庭的声音，又怎么可能是梅鹤庭？",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-10"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:78-80:mini_arc",
+    "chapterRange": "78-80",
+    "chapterNumbers": [
+      78,
+      79,
+      80
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 73 章   倒反天罡（续 2）",
+    "summary": "小故事：第 73 章   倒反天罡：在第 73-80 章，宣明珠、梅鹤庭、鹤庭、阿姐处在「有人一夜未眠, 有人一夜无梦。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、鹤庭、阿姐、言淮先经历「有人一夜未眠, 有人一夜无梦；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「梅穆平当场运了一脑门子气，拍案低喝：“梅长生，好好，你如今成了天子近臣，这么盆污水说扣便扣到我头上！」给出阶段性回报，让宣明珠、梅鹤庭、鹤庭的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "不要那些孟浪乱梦恼人时, 它偏偏不期而至, 可当他需要这梦境助他一臂之力, 却又成了留不住的鸿泥雪爪，不肯遂他的愿。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "阿姐",
+      "言淮",
+      "出去",
+      "这个",
+      "着他"
+    ],
+    "startReason": "第 78 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 80 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-10"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:81-85:mini_arc",
+    "chapterRange": "81-85",
+    "chapterNumbers": [
+      81,
+      82,
+      83,
+      84,
+      85
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 81 章   至少穿件衣吧大人",
+    "summary": "小故事：第 81 章   至少穿件衣吧大人：在第 81-88 章，宣明珠、梅鹤庭、宝鸦、过来处在「东院这厢, 满院子的人遣散了，宣明珠方清嗽一声，领着小宝鸦的手走出门。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、过来、鹤庭先经历「东院这厢, 满院子的人遣散了，宣明珠方清嗽一声，领着小宝鸦的手走出门；宣明珠与梅鹤庭之间的信息差开始缩小」，随后围绕连续事件推进。这一段通过「月洞门外，余小七在那里等候多时了，不敢正眼目睹公主之凤仪，一直用余光留意着那头的动静。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "言淮"
+    ],
+    "startReason": "第 81 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 85 章：梅长生浑身骤静，撩起那从水里涝出一样湿红的长睫，眸海星沉，下一瞬，铺天盖地吞没她。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-11"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:86-88:mini_arc",
+    "chapterRange": "86-88",
+    "chapterNumbers": [
+      86,
+      87,
+      88
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 81 章   至少穿件衣吧大人（续 2）",
+    "summary": "小故事：第 81 章   至少穿件衣吧大人：在第 81-88 章，宣明珠、梅鹤庭、宝鸦、过来处在「东院这厢, 满院子的人遣散了，宣明珠方清嗽一声，领着小宝鸦的手走出门。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、过来、鹤庭先经历「东院这厢, 满院子的人遣散了，宣明珠方清嗽一声，领着小宝鸦的手走出门；宣明珠与梅鹤庭之间的信息差开始缩小」，随后围绕连续事件推进。这一段通过「月洞门外，余小七在那里等候多时了，不敢正眼目睹公主之凤仪，一直用余光留意着那头的动静。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "言淮"
+    ],
+    "startReason": "第 86 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 88 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-11"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:89-93:mini_arc",
+    "chapterRange": "89-93",
+    "chapterNumbers": [
+      89,
+      90,
+      91,
+      92,
+      93
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 89 章   此门中",
+    "summary": "小故事：第 89 章   此门中：在第 89-96 章，宣明珠、梅鹤庭、姜瑾、皇帝处在「“梅长生！」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、姜瑾、皇帝、鹤庭先经历「“梅长生；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「继而，又有三个侍卫跳下来救驾，可惜不是人人从那样高的地方下来都能毫发无伤，其中一侍卫当场撞破了头颅，血流如柱。」给出阶段性回报，让宣明珠、梅鹤庭、姜瑾的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "姜瑾",
+      "皇帝",
+      "泓儿"
+    ],
+    "startReason": "第 89 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 93 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-12"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:94-96:mini_arc",
+    "chapterRange": "94-96",
+    "chapterNumbers": [
+      94,
+      95,
+      96
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 89 章   此门中（续 2）",
+    "summary": "小故事：第 89 章   此门中：在第 89-96 章，宣明珠、梅鹤庭、姜瑾、皇帝处在「“梅长生！」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、姜瑾、皇帝、鹤庭先经历「“梅长生；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「继而，又有三个侍卫跳下来救驾，可惜不是人人从那样高的地方下来都能毫发无伤，其中一侍卫当场撞破了头颅，血流如柱。」给出阶段性回报，让宣明珠、梅鹤庭、姜瑾的处境发生变化，并在结尾留下「”」作为下一段牵引。",
+    "mainConflict": "主角能力被危机逼出，需要在质疑中证明自己。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "姜瑾",
+      "皇帝",
+      "泓儿"
+    ],
+    "startReason": "第 94 章：推进关系变化，让行动替代解释",
+    "endReason": "第 96 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-12"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:97-101:mini_arc",
+    "chapterRange": "97-101",
+    "chapterNumbers": [
+      97,
+      98,
+      99,
+      100,
+      101
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 97 章   扫尽洛阳雪",
+    "summary": "小故事：第 97 章   扫尽洛阳雪：在第 97-104 章，宣明珠、梅鹤庭、宝鸦、黄福全处在「嘤鸣宫中, 皇帝听到黄福全的回禀，慢慢哦了一声。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、黄福全、皇帝先经历「嘤鸣宫中, 皇帝听到黄福全的回禀，慢慢哦了一声；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「知道以梅大人的手段，想逼谁做什么，多半只能迫得对方不得不从，可“护短”二字怎么写，她真想迁怒谁，何曾讲过道理。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「”女子轻声呢喃」作为下一段牵引。",
+    "mainConflict": "梅长生手指间把玩着一支绿沉檀小羊毫，似笑非笑：“听闻珩儿日前病了一场，如今可好了？",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "黄福全",
+      "皇帝"
+    ],
+    "startReason": "第 97 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 101 章：”",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-13"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:102-104:mini_arc",
+    "chapterRange": "102-104",
+    "chapterNumbers": [
+      102,
+      103,
+      104
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 97 章   扫尽洛阳雪（续 2）",
+    "summary": "小故事：第 97 章   扫尽洛阳雪：在第 97-104 章，宣明珠、梅鹤庭、宝鸦、黄福全处在「嘤鸣宫中, 皇帝听到黄福全的回禀，慢慢哦了一声。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、黄福全、皇帝先经历「嘤鸣宫中, 皇帝听到黄福全的回禀，慢慢哦了一声；宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「知道以梅大人的手段，想逼谁做什么，多半只能迫得对方不得不从，可“护短”二字怎么写，她真想迁怒谁，何曾讲过道理。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「”女子轻声呢喃」作为下一段牵引。",
+    "mainConflict": "梅长生手指间把玩着一支绿沉檀小羊毫，似笑非笑：“听闻珩儿日前病了一场，如今可好了？",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "黄福全",
+      "皇帝"
+    ],
+    "startReason": "第 102 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 104 章：”女子轻声呢喃。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-13"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:105-109:mini_arc",
+    "chapterRange": "105-109",
+    "chapterNumbers": [
+      105,
+      106,
+      107,
+      108,
+      109
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 105 章   “我就要送傩。”……",
+    "summary": "小故事：第 105 章   “我就要送傩。”……：在第 105-111 章，宣明珠、梅鹤庭、宝鸦、鹤庭处在「次日是元宵。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、鹤庭、梅阁老先经历「次日是元宵；宣明珠与宝鸦从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「同时，护国寺亦被御林军戒严起来，寺中上从方丈座师，下至伙者小沙弥，一一往细处排查身份。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「-----------------------------------------------------------------------」作为下一段牵引。",
+    "mainConflict": "她跟了他五年，依旧和初识一样，寡言又执拗，那张不点而红的小嘴那么漂亮，却就是不肯说软言蜜语，他看不惯，就一次次命她跪下去含住自己，非要污了那净丽的唇色，才觉痛快。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "梅阁老",
+      "出去",
+      "意思"
+    ],
+    "startReason": "第 105 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 109 章：心中想，若他还有第四份礼物，她是万万不能要了。",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-14"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  },
+  {
+    "id": "chang-gong-zhu:window:110-111:mini_arc",
+    "chapterRange": "110-111",
+    "chapterNumbers": [
+      110,
+      111
+    ],
+    "kind": "mini_arc",
+    "title": "小故事：第 105 章   “我就要送傩。”……（续 2）",
+    "summary": "小故事：第 105 章   “我就要送傩。”……：在第 105-111 章，宣明珠、梅鹤庭、宝鸦、鹤庭处在「次日是元宵。」的情境中，故事围绕释放阶段性高光，同时改变人物处境展开。宣明珠、梅鹤庭、宝鸦、鹤庭、梅阁老先经历「次日是元宵；宣明珠与宝鸦从表面冲突转向隐性保护/重新评估」，随后围绕连续事件推进。这一段通过「同时，护国寺亦被御林军戒严起来，寺中上从方丈座师，下至伙者小沙弥，一一往细处排查身份。」给出阶段性回报，让宣明珠、梅鹤庭、宝鸦的处境发生变化，并在结尾留下「-----------------------------------------------------------------------」作为下一段牵引。",
+    "mainConflict": "她跟了他五年，依旧和初识一样，寡言又执拗，那张不点而红的小嘴那么漂亮，却就是不肯说软言蜜语，他看不惯，就一次次命她跪下去含住自己，非要污了那净丽的唇色，才觉痛快。",
+    "involvedCharacters": [
+      "宣明珠",
+      "梅鹤庭",
+      "宝鸦",
+      "梅阁老",
+      "出去",
+      "意思"
+    ],
+    "startReason": "第 110 章：释放阶段性高光，同时改变人物处境",
+    "endReason": "第 111 章：-----------------------------------------------------------------------",
+    "source": "plot_threads",
+    "sourceThreadIds": [
+      "mini-arc-14"
+    ],
+    "confidence": {
+      "ruleScore": 1,
+      "llmScore": null,
+      "llmModel": null,
+      "reasons": [
+        "continuous_chapter_numbers",
+        "window_size_in_range",
+        "has_title_summary_conflict",
+        "has_involved_characters",
+        "has_start_end_reason",
+        "source_plot_threads"
+      ],
+      "llmReasons": null
+    },
+    "qualityFlags": []
+  }
+]

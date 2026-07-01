@@ -1,0 +1,97 @@
+{
+  "characters": [
+    {
+      "name": "",
+      "aliases": ["明珠", "长公主", "大长公主", "大长公", "殿下", "公主", "公主殿"],
+      "role": "lead",
+      "function": "",
+      "motivation": "在压力中争取主动权",
+      "relationships": [
+        {
+          "梅鹤庭": "旧情破裂"
+        }
+      ],
+      "evidence": [
+        "大晋永淳三年春，长公主府大设华筵。",
+        "宴会的后半场，作为寿星的宣明珠没再露面。",
+        "黄昏宴席散场，梅鹤庭倒过来了，但长公主寝殿的雕花门阖着，将他拦在外面。"
+      ],
+      "sourceCharacterNames": [
+        "大长公主",
+        "长公主",
+        "公主",
+        "公主殿",
+        "宣明珠",
+        "梅鹤庭"
+      ]
+    },
+    {
+      "name": "",
+      "aliases": ["长生", "梅长生", "梅大人"],
+      "role": "key_relationship",
+      "function": "",
+      "motivation": "在压力中争取主动权",
+      "relationships": [
+        "梅鹤庭：旧情破裂"
+      ],
+      "evidence": [],
+      "sourceCharacterNames": [
+        "长生",
+        "梅长生",
+        "梅大人",
+        "梅鹤庭"
+      ]
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "name": "崔嬷嬷",
+      "aliases": ["崔大人"],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "证明自身能力并掌握命运",
+      "pressure": "外部评价和目标阻碍"
+    },
+    {
+      "name": "周太医",
+      "aliases": ["周大人"],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "证明自身能力并掌握命运",
+      "pressure": "外部评价和目标阻碍"
+    },
+    {
+      "name": "姜瑾",
+      "aliases": [],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "在压力中争取主动权",
+      "pressure": "外部评价和目标阻碍"
+    },
+    {
+      "name": "杨珂芝",
+      "aliases": ["珂芝"],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "在压力中争取主动权",
+      "pressure": "外部评价和目标阻碍"
+    },
+    {
+      "name": "宝鸦",
+      "aliases": [],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "在压力中争取主动权",
+      "pressure": "外部评价和目标阻碍"
+    },
+    {
+      "name": "余小七",
+      "aliases": ["小七"],
+      "roleGuess": "配角/支线角色",
+      "importance": "supporting",
+      "desireGuess": "弥补亏欠或保护重要之人",
+      "pressure": "外部评价和目标阻碍"
+    }
+  ],
+  "notes": []
+}

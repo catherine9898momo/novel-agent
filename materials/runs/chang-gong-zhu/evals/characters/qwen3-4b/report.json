@@ -1,0 +1,7 @@
+{
+  "model": "qwen3:4b",
+  "rejectedCandidates": [],
+  "notes": [
+    "ollama character refinement model=qwen3:4b"
+  ]
+}

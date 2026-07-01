@@ -1,0 +1,544 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "id": "chang-gong-zhu",
+    "title": "长公主病入膏肓后",
+    "sourcePath": "downloads/《长公主病入膏肓后》作者：晏闲.txt",
+    "importedAt": "2026-06-27T18:02:40.476Z",
+    "wordCount": 506698,
+    "chapterCount": 111
+  },
+  "collection": "reusable_materials",
+  "count": 29,
+  "items": [
+    {
+      "id": "character-e5aea3e6988ee78fa0",
+      "kind": "character_archetype",
+      "label": "核心主角：宣明珠",
+      "pattern": "外部评价和目标阻碍下仍追求在压力中争取主动权的人物模型。",
+      "tags": [
+        "人物",
+        "核心主角"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "大晋永淳三年春，长公主府大设华筵。",
+        "宴会的后半场，作为寿星的宣明珠没再露面。",
+        "昨晚他在衙署宿直，加上前日晚上被拒之门外，算来确有两整日不曾见过宣明珠了，怪不得会梦到她生气。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    },
+    {
+      "id": "character-e6a285e9b9a4e5baad",
+      "kind": "character_archetype",
+      "label": "关键关系对象：梅鹤庭",
+      "pattern": "外部评价和目标阻碍下仍追求在压力中争取主动权的人物模型。",
+      "tags": [
+        "人物",
+        "关键关系对象"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "梅鹤庭，昔年帝师的亲传学生，晋明帝钦点的探花郎，身上那股子清冷禁绝的劲儿，啧，真是勾人。",
+        "黄昏宴席散场，梅鹤庭倒过来了，但长公主寝殿的雕花门阖着，将他拦在外面。",
+        "大理寺后衙的一间简舍内，枕臂伏睡在书案的梅鹤庭猛然惊醒。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    },
+    {
+      "id": "character-e5b494e5acb7e5acb7",
+      "kind": "character_archetype",
+      "label": "配角/支线角色：崔嬷嬷",
+      "pattern": "外部评价和目标阻碍下仍追求证明自身能力并掌握命运的人物模型。",
+      "tags": [
+        "人物",
+        "配角/支线角色"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "公主心中压着一股子气，崔嬷嬷知道，是气驸马没为她准备生辰礼，又不愿拉下脸去提醒，正闹着别扭。",
+        "崔嬷嬷心里抽凛子一寒。",
+        "一直紧盯着三位太医神情变化的崔嬷嬷，当场堕了泪。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    },
+    {
+      "id": "character-e591a8e5a4aae58cbb",
+      "kind": "character_archetype",
+      "label": "配角/支线角色：周太医",
+      "pattern": "外部评价和目标阻碍下仍追求证明自身能力并掌握命运的人物模型。",
+      "tags": [
+        "人物",
+        "配角/支线角色"
+      ],
+      "sourceChapters": [
+        3
+      ],
+      "evidence": [
+        "歇息不一时，杨太医入府请脉，随行的还有尚药局前掌司林铉，以及一位专攻气血疑症的周太医。",
+        "周太医背着药箱自后门入府，一路有下人为他撑伞, 匆匆然来到鸣皋苑, 但见廊下灯笼通明如昼, 侍女肃容，仿佛严阵以待着什么。",
+        "太医来了，柏木制的药箱几乎要颠碎周太医后脊的骨头。"
+      ],
+      "copyrightSafeNote": "保留人物功能和动机结构，不复用原文表达。"
+    },
+    {
+      "id": "relationship-e5aea3e6988ee78fa0-e6a285e9b9a4e5baad",
+      "kind": "relationship_dynamic",
+      "label": "宣明珠 / 梅鹤庭 关系推进",
+      "pattern": "从误解/防备出发，用暗中相助、共同危机或公开高光推动信任变化。",
+      "tags": [
+        "关系线",
+        "张力",
+        "信任变化"
+      ],
+      "sourceChapters": [
+        1,
+        2,
+        3
+      ],
+      "evidence": [
+        "第 1 章：宣明珠与梅鹤庭之间的信息差开始缩小。",
+        "第 2 章：宣明珠与梅鹤庭之间的信息差开始缩小。",
+        "第 3 章：宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估。",
+        "第 4 章：宣明珠与梅鹤庭从表面冲突转向隐性保护/重新评估。",
+        "第 5 章：宣明珠与梅鹤庭之间的信息差开始缩小。"
+      ],
+      "copyrightSafeNote": "保留关系动力学，不复用具体桥段表达。"
+    },
+    {
+      "id": "chapter-hook-1",
+      "kind": "chapter_hook",
+      "label": "第 1 章钩子",
+      "pattern": "这七年，原是她一厢情愿。",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "这七年，原是她一厢情愿。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-1",
+      "kind": "highlight_pattern",
+      "label": "第 1 章高光",
+      "pattern": "用一个小目标承接上一章欠账，并在结尾制造新问题。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "用专业能力解决危机，形成能力高光。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-2",
+      "kind": "chapter_hook",
+      "label": "第 2 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "爽感",
+        "好奇"
+      ],
+      "sourceChapters": [
+        2
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-2",
+      "kind": "highlight_pattern",
+      "label": "第 2 章高光",
+      "pattern": "先制造憋屈和外部轻视，再安排主角用行动拿回主动权。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        2
+      ],
+      "evidence": [
+        "用专业能力解决危机，形成能力高光。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-3",
+      "kind": "chapter_hook",
+      "label": "第 3 章钩子",
+      "pattern": "宣明珠红着眼开口，轻唤她儿时的昵称。",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        3
+      ],
+      "evidence": [
+        "宣明珠红着眼开口，轻唤她儿时的昵称。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-3",
+      "kind": "highlight_pattern",
+      "label": "第 3 章高光",
+      "pattern": "让关系对象先用行动托底，再延迟揭示真实动机。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        3
+      ],
+      "evidence": [
+        "这两道兵权，是晋明帝山陵崩前留给她的护身符。",
+        "一直紧盯着三位太医神情变化的崔嬷嬷，当场堕了泪。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-4",
+      "kind": "chapter_hook",
+      "label": "第 4 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "爽感",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        4
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-4",
+      "kind": "highlight_pattern",
+      "label": "第 4 章高光",
+      "pattern": "先制造憋屈和外部轻视，再安排主角用行动拿回主动权。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        4
+      ],
+      "evidence": [
+        "当场就落了泪。",
+        "“诸人离他远些，护院何在，去探此人是否还有鼻息。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-5",
+      "kind": "chapter_hook",
+      "label": "第 5 章钩子",
+      "pattern": "宣明珠见了这碗苦药汤，没奈何，蹙眉接过白瓷碗一口气喝下。",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        5
+      ],
+      "evidence": [
+        "宣明珠见了这碗苦药汤，没奈何，蹙眉接过白瓷碗一口气喝下。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-5",
+      "kind": "highlight_pattern",
+      "label": "第 5 章高光",
+      "pattern": "公开场合反转权威判断，形成打脸高光。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        5
+      ],
+      "evidence": [
+        "公开场合中完成反击或身份/能力证明。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-6",
+      "kind": "chapter_hook",
+      "label": "第 6 章钩子",
+      "pattern": "既是亲手种进心里的倒刺，没关系，她可以一根根再拔.出来。",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        6
+      ],
+      "evidence": [
+        "既是亲手种进心里的倒刺，没关系，她可以一根根再拔.出来。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-6",
+      "kind": "highlight_pattern",
+      "label": "第 6 章高光",
+      "pattern": "公开场合反转权威判断，形成打脸高光。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        6
+      ],
+      "evidence": [
+        "公开场合中完成反击或身份/能力证明。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-7",
+      "kind": "chapter_hook",
+      "label": "第 7 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "好奇",
+        "暧昧/期待"
+      ],
+      "sourceChapters": [
+        7
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-7",
+      "kind": "highlight_pattern",
+      "label": "第 7 章高光",
+      "pattern": "公开场合反转权威判断，形成打脸高光。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        7
+      ],
+      "evidence": [
+        "公开场合中完成反击或身份/能力证明。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-8",
+      "kind": "chapter_hook",
+      "label": "第 8 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        8
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-8",
+      "kind": "highlight_pattern",
+      "label": "第 8 章高光",
+      "pattern": "让关系对象先用行动托底，再延迟揭示真实动机。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        8
+      ],
+      "evidence": [
+        "“好啊，六妹是想叫北衙都尉护驾，还是本宫的羽林军，本宫替你一并召来。",
+        "成玉公主骤见到心仪的男子，两只眼散发绿光，发觉梅鹤庭如此明显的护短，又备感郁闷。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-9",
+      "kind": "chapter_hook",
+      "label": "第 9 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        9
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-9",
+      "kind": "highlight_pattern",
+      "label": "第 9 章高光",
+      "pattern": "让关系对象先用行动托底，再延迟揭示真实动机。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        9
+      ],
+      "evidence": [
+        "成玉竟不敢与那双森黑的眸子对视，心头费解：梅鹤庭不是一惯不喜宣明珠吗，为何今日如此护着她？",
+        "许是那一日凑趣的少年郎多了些，又许是跨马围着郭小郎君转圈的时候马蹄急了些，又或者聊知心话的语气重了些，总之，年过十七屋里还放着四个年轻奶娘的郭小郎君，当场被吓尿了裤子。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-10",
+      "kind": "chapter_hook",
+      "label": "第 10 章钩子",
+      "pattern": "他根本配不上公主的好。",
+      "tags": [
+        "章节钩子",
+        "爽感",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        10
+      ],
+      "evidence": [
+        "他根本配不上公主的好。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-10",
+      "kind": "highlight_pattern",
+      "label": "第 10 章高光",
+      "pattern": "先制造憋屈和外部轻视，再安排主角用行动拿回主动权。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        10
+      ],
+      "evidence": [
+        "雪堂不为所动，声音刻板道：“园中自有暗卫保护殿下安全，没有梅驸马，殿下也快快活活长到了二十岁。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-11",
+      "kind": "chapter_hook",
+      "label": "第 11 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        11
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-11",
+      "kind": "highlight_pattern",
+      "label": "第 11 章高光",
+      "pattern": "让关系对象先用行动托底，再延迟揭示真实动机。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        11
+      ],
+      "evidence": [
+        "她仿佛一夕间变回一个无助的孩童，没有任何力量保护自己与所爱的人。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    },
+    {
+      "id": "chapter-hook-12",
+      "kind": "chapter_hook",
+      "label": "第 12 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        12
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "highlight-12",
+      "kind": "highlight_pattern",
+      "label": "第 12 章高光",
+      "pattern": "公开场合反转权威判断，形成打脸高光。",
+      "tags": [
+        "高光",
+        "情绪回报"
+      ],
+      "sourceChapters": [
+        12
+      ],
+      "evidence": [
+        "公开场合中完成反击或身份/能力证明。"
+      ],
+      "copyrightSafeNote": "抽象高光功能，不直接迁移原文事件细节。"
+    }
+  ]
+}

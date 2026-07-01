@@ -1,0 +1,11 @@
+{
+  "sourceId": "chang-gong-zhu",
+  "refinedAt": "2026-06-28T07:53:02.057Z",
+  "characterCount": 40,
+  "plotThreadCount": 18,
+  "rejectedCharacterCandidates": [],
+  "notes": [
+    "local heuristic correction: preserves existing decomposer aliases and normalizes schema",
+    "local heuristic correction: expands plot thread schema for review and planning"
+  ]
+}

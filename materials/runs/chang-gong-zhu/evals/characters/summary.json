@@ -1,0 +1,36 @@
+{
+  "sourceId": "chang-gong-zhu",
+  "createdAt": "2026-06-28T14:04:32.399Z",
+  "models": [
+    {
+      "model": "qwen2.5:3b",
+      "outputDir": "materials/runs/chang-gong-zhu/evals/characters/qwen2.5-3b",
+      "metrics": {
+        "jsonSuccess": true,
+        "characterCount": 2,
+        "aliasGroupHits": 2,
+        "keyCharacterHits": 2,
+        "noiseNameCount": 0,
+        "completeFieldRate": 0.625,
+        "coverageRate": 0.25,
+        "durationMs": 50692,
+        "score": 100
+      }
+    },
+    {
+      "model": "qwen2.5:7b",
+      "outputDir": "materials/runs/chang-gong-zhu/evals/characters/qwen2.5-7b",
+      "metrics": {
+        "jsonSuccess": true,
+        "characterCount": 2,
+        "aliasGroupHits": 2,
+        "keyCharacterHits": 2,
+        "noiseNameCount": 0,
+        "completeFieldRate": 0.375,
+        "coverageRate": 0.25,
+        "durationMs": 176016,
+        "score": 95
+      }
+    }
+  ]
+}

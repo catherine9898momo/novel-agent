@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "id": "chang-gong-zhu",
+    "title": "长公主病入膏肓后",
+    "sourcePath": "downloads/《长公主病入膏肓后》作者：晏闲.txt",
+    "importedAt": "2026-06-27T18:02:40.476Z",
+    "wordCount": 506698,
+    "chapterCount": 111
+  },
+  "collection": "reusable_materials.chapter_hook",
+  "count": 12,
+  "items": [
+    {
+      "id": "chapter-hook-1",
+      "kind": "chapter_hook",
+      "label": "第 1 章钩子",
+      "pattern": "这七年，原是她一厢情愿。",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        1
+      ],
+      "evidence": [
+        "这七年，原是她一厢情愿。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-2",
+      "kind": "chapter_hook",
+      "label": "第 2 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "爽感",
+        "好奇"
+      ],
+      "sourceChapters": [
+        2
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-3",
+      "kind": "chapter_hook",
+      "label": "第 3 章钩子",
+      "pattern": "宣明珠红着眼开口，轻唤她儿时的昵称。",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        3
+      ],
+      "evidence": [
+        "宣明珠红着眼开口，轻唤她儿时的昵称。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-4",
+      "kind": "chapter_hook",
+      "label": "第 4 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "爽感",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        4
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-5",
+      "kind": "chapter_hook",
+      "label": "第 5 章钩子",
+      "pattern": "宣明珠见了这碗苦药汤，没奈何，蹙眉接过白瓷碗一口气喝下。",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        5
+      ],
+      "evidence": [
+        "宣明珠见了这碗苦药汤，没奈何，蹙眉接过白瓷碗一口气喝下。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-6",
+      "kind": "chapter_hook",
+      "label": "第 6 章钩子",
+      "pattern": "既是亲手种进心里的倒刺，没关系，她可以一根根再拔.出来。",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        6
+      ],
+      "evidence": [
+        "既是亲手种进心里的倒刺，没关系，她可以一根根再拔.出来。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-7",
+      "kind": "chapter_hook",
+      "label": "第 7 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "好奇",
+        "暧昧/期待"
+      ],
+      "sourceChapters": [
+        7
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-8",
+      "kind": "chapter_hook",
+      "label": "第 8 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        8
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-9",
+      "kind": "chapter_hook",
+      "label": "第 9 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        9
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-10",
+      "kind": "chapter_hook",
+      "label": "第 10 章钩子",
+      "pattern": "他根本配不上公主的好。",
+      "tags": [
+        "章节钩子",
+        "爽感",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        10
+      ],
+      "evidence": [
+        "他根本配不上公主的好。"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-11",
+      "kind": "chapter_hook",
+      "label": "第 11 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇",
+        "暧昧/期待",
+        "奖励感"
+      ],
+      "sourceChapters": [
+        11
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    },
+    {
+      "id": "chapter-hook-12",
+      "kind": "chapter_hook",
+      "label": "第 12 章钩子",
+      "pattern": "”",
+      "tags": [
+        "章节钩子",
+        "好奇"
+      ],
+      "sourceChapters": [
+        12
+      ],
+      "evidence": [
+        "”"
+      ],
+      "copyrightSafeNote": "抽象章末欠账机制，使用时需重新生成场景和语言。"
+    }
+  ]
+}

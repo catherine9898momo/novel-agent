@@ -1,0 +1,17 @@
+{
+  "sourceId": "chang-gong-zhu",
+  "chapterRange": "1-2",
+  "cardCount": 2,
+  "reviewIssueCount": 21,
+  "metrics": {
+    "candidateCount": 19,
+    "acceptedCardCount": 2,
+    "rejectedCandidateCount": 17,
+    "noiseRejectionCount": 9,
+    "duplicateAliasMergeCount": 1,
+    "relationshipTargetValidityRate": 1,
+    "averageEvidenceCount": 3,
+    "averageBorrowableElementCount": 3
+  },
+  "createdAt": "2026-06-28T16:01:57.029Z"
+}
