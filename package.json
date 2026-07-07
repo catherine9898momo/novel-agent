@@ -15,7 +15,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "doctor": "npx react-doctor@latest",
-    "materials": "tsx src/materials-cli.ts"
+    "materials": "tsx src/materials-cli.ts",
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/main.ts",
+    "build": "tsc",
+    "check": "npm run typecheck && npm test",
+    "metrics:events": "tsx src/observability-cli.ts"
   },
   "keywords": [],
   "author": "",

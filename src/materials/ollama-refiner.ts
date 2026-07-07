@@ -165,6 +165,7 @@ export function compactCharacterRefinementInputForOllama(input: CharacterRefinem
       aliases: character.aliases,
       roleGuess: character.roleGuess,
       importance: character.importance,
+      mentionCount: character.mentionCount,
       desireGuess: character.desireGuess,
       pressure: character.pressure,
       firstSeenChapter: character.firstSeenChapter,

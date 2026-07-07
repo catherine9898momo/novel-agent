@@ -2,6 +2,8 @@ import { initFanficProject, loadFanficProjectState } from "./fanfic/project.js";
 import { runFanficCommand } from "./fanfic/commands.js";
 import { readFanficIdeaInput } from "./fanfic/cli-input.js";
 import { getNextAllowedAction } from "./fanfic/state-machine.js";
+import { continueFanficProject } from "./fanfic/orchestrator.js";
+import { createEventSinkFromEnv } from "./observability/env.js";
 import type { FanficCommand } from "./fanfic/types.js";
 
 const [cmd, storyId, maybeCommand, ...commandArgs] = process.argv.slice(2);
@@ -11,6 +13,7 @@ const USAGE = `
   npm run fanfic -- init <story_id>
   npm run fanfic -- status <story_id>
   npm run fanfic -- next <story_id>
+  npm run fanfic -- continue <story_id> [--idea "短同人创意" | --idea-file <path>]
   npm run fanfic -- run <story_id> <command>
   npm run fanfic -- run <story_id> parse_idea --idea-file <path>
   npm run fanfic -- run <story_id> parse_idea --idea "短同人创意"
@@ -41,6 +44,16 @@ async function main(): Promise<void> {
       console.log(getNextAllowedAction(state) ?? "无可执行下一步");
       break;
     }
+    case "continue": {
+      const ideaArgs = [maybeCommand, ...commandArgs].filter((arg): arg is string => typeof arg === "string" && arg.length > 0);
+      const ideaText = hasIdeaInput(ideaArgs) ? await readFanficIdeaInput(ideaArgs) : undefined;
+      const result = await continueFanficProject(storyId, { ideaText, eventSink: createEventSinkFromEnv(process.env) });
+      console.log(`已自动执行: ${result.executedCommands.length > 0 ? result.executedCommands.join(", ") : "无"}`);
+      console.log(`当前状态: ${result.state.status}`);
+      console.log(`下一步: ${result.nextAction ?? "无"}`);
+      console.log(`停止原因: ${result.stoppedReason}`);
+      break;
+    }
     case "run": {
       if (!maybeCommand) {
         console.log(USAGE);
@@ -58,6 +71,10 @@ async function main(): Promise<void> {
     default:
       console.log(USAGE);
   }
+}
+
+function hasIdeaInput(args: string[]): boolean {
+  return args.includes("--idea") || args.includes("--idea-file");
 }
 
 function printState(state: Awaited<ReturnType<typeof loadFanficProjectState>>): void {
