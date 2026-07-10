@@ -1,0 +1,4 @@
+#!/bin/sh
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+node "$repo_root/scripts/career-pending-hook.cjs" "$repo_root" || true
+exit 0

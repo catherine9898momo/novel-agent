@@ -13,6 +13,7 @@ import { loadCaseMetadata } from "./case-metadata.js";
 import { loadCommitContext } from "./commit-context.js";
 import { classifyCommit } from "./eligibility.js";
 import { resolveGitDir, runGit, type GitRunner } from "./git-runner.js";
+import { runDoctor, runInstallHook } from "./hook-cli.js";
 import { PendingStore } from "./pending-store.js";
 
 export class CareerCliUsageError extends Error {
@@ -45,6 +46,8 @@ export async function runCareerCli(
   if (command === "mark") return runMark(args, pendingStore, indexStore, now);
   if (command === "capture" || command === "merge") return runCapture(command, args, rootDir, pendingStore, indexStore);
   if (command === "rebuild-pending") return runRebuildPending(pendingStore, indexStore, runner, rootDir, now);
+  if (command === "install-hook") return runInstallHook(runner, rootDir);
+  if (command === "doctor") return runDoctor(runner, rootDir, pendingStore);
   throw new CareerCliUsageError(`Unknown career command: ${command ?? "<missing>"}`);
 }
 
