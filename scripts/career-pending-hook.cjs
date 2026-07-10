@@ -18,6 +18,19 @@ function gitOptional(root, args, fallback) {
   }
 }
 
+function publishPendingRecord(pendingDir, target, record, fileSystem = fs) {
+  fileSystem.mkdirSync(pendingDir, { recursive: true });
+  const temp = path.join(pendingDir, `.${record.commitHash}.${process.pid}.${Date.now()}.tmp`);
+  fileSystem.writeFileSync(temp, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  try {
+    fileSystem.linkSync(temp, target);
+  } catch (error) {
+    if (!error || error.code !== "EEXIST") throw error;
+  } finally {
+    fileSystem.rmSync(temp, { force: true });
+  }
+}
+
 function main() {
   const root = process.argv[2];
   if (!root) return;
@@ -29,27 +42,22 @@ function main() {
   const committedAt = git(root, ["log", "-1", "--format=%cI"]);
   const pendingDir = path.join(gitDir, "career-capture", "pending");
   const target = path.join(pendingDir, `${commitHash}.json`);
-  fs.mkdirSync(pendingDir, { recursive: true });
-  const temp = path.join(pendingDir, `.${commitHash}.${process.pid}.${Date.now()}.tmp`);
-  fs.writeFileSync(temp, `${JSON.stringify({
+  publishPendingRecord(pendingDir, target, {
     commitHash,
     branch,
     subject,
     committedAt,
     detectedAt: new Date().toISOString(),
     status: "pending",
-  }, null, 2)}\n`, "utf8");
-  try {
-    fs.linkSync(temp, target);
-  } catch (error) {
-    if (!error || error.code !== "EEXIST") throw error;
-  } finally {
-    fs.rmSync(temp, { force: true });
-  }
+  });
 }
 
-try {
-  main();
-} catch (error) {
-  process.stderr.write(`[career-capture] ${error instanceof Error ? error.message : String(error)}\n`);
+module.exports = { publishPendingRecord };
+
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    process.stderr.write(`[career-capture] ${error instanceof Error ? error.message : String(error)}\n`);
+  }
 }
