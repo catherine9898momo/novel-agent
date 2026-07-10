@@ -15,6 +15,18 @@ import { classifyCommit } from "./eligibility.js";
 import { resolveGitDir, runGit, type GitRunner } from "./git-runner.js";
 import { PendingStore } from "./pending-store.js";
 
+export class CareerCliUsageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CareerCliUsageError";
+  }
+}
+
+export function isCommitUnreachableError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /bad object|unknown revision|not a valid object name|ambiguous argument|invalid object name/i.test(message);
+}
+
 export async function runCareerCli(
   args: string[],
   dependencies: CareerCliDependencies = { rootDir: process.cwd() },
@@ -33,7 +45,7 @@ export async function runCareerCli(
   if (command === "mark") return runMark(args, pendingStore, indexStore, now);
   if (command === "capture" || command === "merge") return runCapture(command, args, rootDir, pendingStore, indexStore);
   if (command === "rebuild-pending") return runRebuildPending(pendingStore, indexStore, runner, rootDir, now);
-  throw new Error(`Unknown career command: ${command ?? "<missing>"}`);
+  throw new CareerCliUsageError(`Unknown career command: ${command ?? "<missing>"}`);
 }
 
 async function runStatus(
@@ -49,7 +61,8 @@ async function runStatus(
     let context: CommitContext;
     try {
       context = await loadContext(record.commitHash);
-    } catch {
+    } catch (error) {
+      if (!isCommitUnreachableError(error)) throw error;
       await markIgnored(record, "commit_unreachable", pendingStore, indexStore, now);
       continue;
     }
@@ -64,7 +77,9 @@ async function runStatus(
 async function runMark(args: string[], pendingStore: PendingStore, indexStore: CareerIndexStore, now: () => string): Promise<CareerCliResult> {
   const commitHash = requiredFlag(args, "--commit");
   const status = requiredFlag(args, "--status") as PendingStatus;
-  if (!new Set<PendingStatus>(["skipped", "deferred", "ignored"]).has(status)) throw new Error("--status must be skipped, deferred, or ignored");
+  if (!new Set<PendingStatus>(["skipped", "deferred", "ignored"]).has(status)) {
+    throw new CareerCliUsageError("--status must be skipped, deferred, or ignored");
+  }
   await pendingStore.mark(commitHash, status, `user_${status}`);
   if (status === "skipped" || status === "ignored") await indexStore.recordDecision({ commitHash, status, decidedAt: now() });
   return { ok: true, command: "mark", commitHash, status };
@@ -79,6 +94,10 @@ async function runCapture(
 ): Promise<CareerCliResult> {
   const commitHash = requiredFlag(args, "--commit");
   const caseId = requiredFlag(args, "--case");
+  const pending = await pendingStore.read(commitHash);
+  if (!pending || (pending.status !== "pending" && pending.status !== "deferred")) {
+    throw new Error(`Pending commit not available for ${command}: ${commitHash}`);
+  }
   const metadata = await loadCaseMetadata(rootDir, caseId);
   if (!metadata.commitHashes.includes(commitHash)) throw new Error(`Career case ${caseId} does not include commit ${commitHash}`);
   const entry: CareerCaseIndexEntry = { ...metadata, path: `career-prepare/novel-agent/cases/${caseId}.md` };
@@ -127,6 +146,6 @@ async function reconcileProcessedRecord(record: PendingCommitRecord, index: Care
 function requiredFlag(args: string[], flag: string): string {
   const index = args.indexOf(flag);
   const value = index === -1 ? undefined : args[index + 1];
-  if (!value || value.startsWith("--")) throw new Error(`${flag} is required`);
+  if (!value || value.startsWith("--")) throw new CareerCliUsageError(`${flag} is required`);
   return value;
 }
