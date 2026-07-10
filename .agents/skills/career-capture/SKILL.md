@@ -15,10 +15,10 @@ Turn completed Novel Agent engineering work into interview-ready evidence withou
 4. Run `npm run career -- context --commit <hash>` for that commit.
 5. Summarize the commit subject, suggested topics, source and test file counts, and verification evidence. Clearly distinguish verified facts from inferences.
 6. Ask exactly one question and offer these four choices: `生成 / 跳过 / 稍后 / 合并`.
-7. For `跳过`, run `npm run career -- skip --commit <hash>`.
-8. For `稍后`, run `npm run career -- defer --commit <hash>`.
+7. For `跳过`, run `npm run career -- mark --commit <hash> --status skipped`.
+8. For `稍后`, run `npm run career -- mark --commit <hash> --status deferred`.
 9. For `合并`, ask which existing case is the target, update that case body and frontmatter, then run `npm run career -- merge --commit <hash> --case <case-id>`.
-10. For `生成`, copy `references/case-template.md`, fill every relevant section, write exactly one case under `career-prepare/novel-agent/`, update the matching topic indexes, then run `npm run career -- capture --commit <hash> --case <case-id>`.
+10. For `生成`, copy `references/case-template.md`, fill every section, write exactly one case to `career-prepare/novel-agent/cases/<case-id>.md` (creating `cases/` when needed), update the matching topic indexes, then run `npm run career -- capture --commit <hash> --case <case-id>`.
 11. Mark unsupported outcome claims with `needs_metrics` or `needs_review`; never invent measurements.
 12. Never read excluded paths from the commit context and never auto-commit the generated documentation.
 

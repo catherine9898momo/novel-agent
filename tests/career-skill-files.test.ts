@@ -10,6 +10,10 @@ describe("career capture project files", () => {
     expect(skill).toContain("npm run career -- status");
     expect(skill).toContain("生成 / 跳过 / 稍后 / 合并");
     expect(skill).toContain("未经用户确认，不得创建案例");
+    expect(skill).toContain("mark --commit <hash> --status skipped");
+    expect(skill).toContain("mark --commit <hash> --status deferred");
+    expect(skill).toContain("career-prepare/novel-agent/cases/<case-id>.md");
+    expect(skill).toContain("fill every section");
   });
 
   it("adds repository-level trigger rules", async () => {
