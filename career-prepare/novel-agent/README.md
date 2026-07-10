@@ -30,3 +30,16 @@ npm run career -- install-hook
 ```bash
 npm run career -- status
 ```
+
+## 已验证的本地流程
+
+以下命令已在功能工作树中实际验证：
+
+```bash
+npm run career -- install-hook
+npm run career -- doctor
+npm run career -- status
+npm run career -- rebuild-pending
+```
+
+Git Hook 只负责快速、非阻塞地记录提交。Codex 创建的提交会在提交完成后按项目 Skill 发起一次确认；其他工具或终端产生的外部提交不会触发实时 AI 回调，而是在下一次 Codex 会话运行 `status`／`rebuild-pending` 时被发现。

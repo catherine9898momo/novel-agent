@@ -25,7 +25,7 @@ describe("loadCommitContext", () => {
       calls.push(args);
       const key = args.slice(0, 2).join(" ");
       if (key === "show -s") return "abc123\u0000parent1\u0000main\u0000Add workflow\u0000Body\u00002026-07-10T00:00:00Z";
-      if (key === "diff-tree --no-commit-id") return "M\tsrc/fanfic/orchestrator.ts\nA\ttests/fanfic-orchestrator.test.ts\nM\tnovels/demo/001.md\nM\tmaterials/runs/book/raw-response.txt";
+      if (args[0] === "diff-tree") return "M\tsrc/fanfic/orchestrator.ts\nA\ttests/fanfic-orchestrator.test.ts\nM\tnovels/demo/001.md\nM\tmaterials/runs/book/raw-response.txt";
       if (key === "show --stat") return "4 files changed";
       if (args[0] === "show" && args.includes("--format=")) return "safe diff sk-test_secret";
       throw new Error(`Unexpected git args: ${args.join(" ")}`);
@@ -46,7 +46,7 @@ describe("loadCommitContext", () => {
       calls.push(args);
       const key = args.slice(0, 2).join(" ");
       if (key === "show -s") return "abc123\u0000parent1\u0000main\u0000Draft novel\u0000\u00002026-07-10T00:00:00Z";
-      if (key === "diff-tree --no-commit-id") return "M\tnovels/demo/001.md";
+      if (args[0] === "diff-tree") return "M\tnovels/demo/001.md";
       if (key === "show --stat") return "1 file changed";
       if (args.includes("--unified=80")) return "private novel content";
       throw new Error(`Unexpected git args: ${args.join(" ")}`);

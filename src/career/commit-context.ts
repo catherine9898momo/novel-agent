@@ -20,7 +20,7 @@ export async function loadCommitContext(
     options.rootDir,
   );
   const fileOutput = await runner(
-    ["diff-tree", "--no-commit-id", "--name-status", "-r", commitHash],
+    ["diff-tree", "--root", "--no-commit-id", "--name-status", "-r", commitHash],
     options.rootDir,
   );
   const diffStat = await runner(
