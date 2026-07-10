@@ -29,9 +29,8 @@ function main() {
   const committedAt = git(root, ["log", "-1", "--format=%cI"]);
   const pendingDir = path.join(gitDir, "career-capture", "pending");
   const target = path.join(pendingDir, `${commitHash}.json`);
-  if (fs.existsSync(target)) return;
   fs.mkdirSync(pendingDir, { recursive: true });
-  const temp = path.join(pendingDir, `.${commitHash}.${process.pid}.tmp`);
+  const temp = path.join(pendingDir, `.${commitHash}.${process.pid}.${Date.now()}.tmp`);
   fs.writeFileSync(temp, `${JSON.stringify({
     commitHash,
     branch,
@@ -40,7 +39,13 @@ function main() {
     detectedAt: new Date().toISOString(),
     status: "pending",
   }, null, 2)}\n`, "utf8");
-  fs.renameSync(temp, target);
+  try {
+    fs.linkSync(temp, target);
+  } catch (error) {
+    if (!error || error.code !== "EEXIST") throw error;
+  } finally {
+    fs.rmSync(temp, { force: true });
+  }
 }
 
 try {
