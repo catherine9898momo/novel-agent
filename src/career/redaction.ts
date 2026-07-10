@@ -1,9 +1,10 @@
 const EXCLUDED_PREFIXES = ["downloads/", "novels/", "fanfics/", "materials/runs/"];
-const EXCLUDED_NAMES = new Set([".env"]);
+const EXCLUDED_NAMES = new Set([".env", "credentials.json", "credentials.yaml", "credentials.yml"]);
 
 export function isExcludedEvidencePath(filePath: string): boolean {
   const normalized = filePath.replace(/\\/g, "/");
-  return EXCLUDED_NAMES.has(normalized)
+  const name = normalized.split("/").at(-1) ?? normalized;
+  return EXCLUDED_NAMES.has(name)
     || EXCLUDED_PREFIXES.some((prefix) => normalized.startsWith(prefix))
     || /(^|\/)(raw-response|model-response)\.(txt|json|md)$/i.test(normalized);
 }

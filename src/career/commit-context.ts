@@ -36,10 +36,12 @@ export async function loadCommitContext(
   const safePaths = files
     .map((item) => item.path)
     .filter((filePath) => !isExcludedEvidencePath(filePath));
-  const diff = await runner(
-    ["show", "--format=", "--unified=80", commitHash, "--", ...safePaths],
-    options.rootDir,
-  );
+  const diff = safePaths.length > 0
+    ? await runner(
+      ["show", "--format=", "--unified=80", commitHash, "--", ...safePaths],
+      options.rootDir,
+    )
+    : "";
 
   return {
     commitHash: resolvedHash,
