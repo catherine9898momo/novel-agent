@@ -36,6 +36,31 @@ export interface CareerIndex {
   decisions: CareerDecision[];
 }
 
+export interface CommitFileChange {
+  status: string;
+  path: string;
+}
+
+export interface CommitContext {
+  commitHash: string;
+  parentHash: string | null;
+  branch: string;
+  subject: string;
+  body: string;
+  committedAt: string;
+  files: CommitFileChange[];
+  diffStat: string;
+  safeDiff: string;
+  relatedTests: string[];
+  relatedDocs: string[];
+  excludedPaths: string[];
+}
+
+export interface EligibilityResult {
+  eligible: boolean;
+  reason: "engineering_change" | "design_change" | "already_processed" | "career_only" | "trivial_change" | "commit_unreachable";
+}
+
 export const EMPTY_CAREER_INDEX: CareerIndex = {
   schemaVersion: 1,
   project: "novel-agent",
