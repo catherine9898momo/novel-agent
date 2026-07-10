@@ -58,3 +58,11 @@ their side effects or external systems:
 When a skill is used, state the skill name and why it is relevant in one short
 sentence. For multi-step work, keep the Novel Agent workflow visible in the
 final summary.
+
+## Career Capture
+
+- Before beginning a new implementation task, run `npm run career -- status`. If it returns an eligible pending commit, invoke the project `career-capture` skill and ask the user before implementation continues.
+- After a successful commit, invoke the project `career-capture` skill for that commit before declaring the task complete.
+- Never generate a career case without explicit user confirmation.
+- Do not trigger capture for commits that only change `career-prepare/novel-agent/**` or whose subject starts with `docs(career):`.
+- Career capture is a documentation side workflow; it must not bypass or alter the Novel Agent story workflow.
