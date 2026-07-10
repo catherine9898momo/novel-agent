@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "doctor": "npx react-doctor@latest",
     "materials": "tsx src/materials-cli.ts",
+    "career": "tsx src/career-cli.ts",
     "typecheck": "tsc --noEmit",
     "start": "tsx src/main.ts",
     "build": "tsc",

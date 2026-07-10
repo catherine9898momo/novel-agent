@@ -61,6 +61,22 @@ export interface EligibilityResult {
   reason: "engineering_change" | "design_change" | "already_processed" | "career_only" | "trivial_change" | "commit_unreachable";
 }
 
+export interface CareerCliDependencies {
+  rootDir: string;
+  gitDir?: string;
+  now?: () => string;
+  runner?: import("./git-runner.js").GitRunner;
+  loadContext?: (commitHash: string) => Promise<CommitContext>;
+}
+
+export type CareerCliResult =
+  | { ok: true; command: "status"; pending: Array<PendingCommitRecord & { eligibility: EligibilityResult }> }
+  | { ok: true; command: "context"; context: CommitContext }
+  | { ok: true; command: "mark" | "capture" | "merge"; commitHash: string; status: PendingStatus; caseId?: string }
+  | { ok: true; command: "rebuild-pending"; created: string[] }
+  | { ok: true; command: "install-hook"; hooksPath: ".githooks" }
+  | { ok: true; command: "doctor"; configured: boolean; hookExists: boolean; pendingCount: number };
+
 export const EMPTY_CAREER_INDEX: CareerIndex = {
   schemaVersion: 1,
   project: "novel-agent",
