@@ -66,3 +66,16 @@ final summary.
 - Never generate a career case without explicit user confirmation.
 - Do not trigger capture for commits that only change `career-prepare/novel-agent/**` or whose subject starts with `docs(career):`.
 - Career capture is a documentation side workflow; it must not bypass or alter the Novel Agent story workflow.
+
+## Mainline Priority Guardrails
+
+- For multi-step work, keep the `Primary Goal` and `Current Milestone` explicit. A task that does not map directly to the current milestone is supporting or meta work and belongs in the backlog by default.
+- Before changing task priority, explicitly tell the user the current goal, the proposed new work, which user-visible capabilities it delays, the expected scope or cost, and the recommended choice. Do not switch until the user confirms that priority change.
+- Treat `continue`, `confirm`, and `follow your recommendation` as approval only for the action already described. They do not implicitly authorize pausing or replacing the mainline goal.
+- Before implementation, state the task's user-visible contribution, affected core module, and acceptance check. If none can be identified, do not add it to the active plan.
+- Without separate user confirmation, supporting and meta work is limited to one commit or 15% of the current milestone effort, whichever comes first.
+- If two consecutive tasks or commits do not advance the core Novel Agent workflow, stop before a third and report the drift to the user.
+- Do not create recursive meta-work: work to document, plan, or evaluate a supporting mechanism must not generate more such work unless the user explicitly pauses the mainline goal.
+- A skill may help execute the current goal but must not broaden a small task into a new project. Follow the repository's scope and skill limits when a skill workflow is disproportionate.
+- Milestone updates must report mainline progress, user-visible change, supporting-work share, and any confirmed priority change.
+- Data-loss risks, security vulnerabilities, or a fully blocked build may temporarily interrupt the mainline, but report the reason, impact, and condition for returning to it immediately.
