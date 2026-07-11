@@ -1,6 +1,41 @@
 {
   "schemaVersion": 1,
   "project": "novel-agent",
-  "cases": [],
-  "decisions": []
+  "cases": [
+    {
+      "caseId": "2026-07-11-career-capture-reliability",
+      "title": "将提交后的面试沉淀做成非阻塞、可恢复的 Agent 旁路",
+      "commitHashes": [
+        "1f2af16bfbbff6360e9b84a1a3998a5ddf862ec2"
+      ],
+      "topics": [
+        "reliability",
+        "human-in-the-loop",
+        "testing",
+        "state-machine"
+      ],
+      "evidenceStatus": "needs_metrics",
+      "createdAt": "2026-07-11T00:00:00Z",
+      "updatedAt": "2026-07-11T00:00:00Z",
+      "path": "career-prepare/novel-agent/cases/2026-07-11-career-capture-reliability.md"
+    }
+  ],
+  "decisions": [
+    {
+      "commitHash": "1f2af16bfbbff6360e9b84a1a3998a5ddf862ec2",
+      "status": "captured",
+      "caseId": "2026-07-11-career-capture-reliability",
+      "decidedAt": "2026-07-11T06:07:31.390Z"
+    },
+    {
+      "commitHash": "1441d4621654121f45b24157f832a3d47b6177aa",
+      "status": "ignored",
+      "decidedAt": "2026-07-11T07:27:48.733Z"
+    },
+    {
+      "commitHash": "d59d0fa52b2417a75b53fbcd6712e51a0b5cd7c1",
+      "status": "ignored",
+      "decidedAt": "2026-07-11T07:27:48.762Z"
+    }
+  ]
 }

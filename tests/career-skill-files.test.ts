@@ -19,21 +19,21 @@ describe("career capture project files", () => {
   it("adds repository-level trigger rules", async () => {
     const agents = (await fs.readFile("AGENTS.md", "utf8")).toLowerCase();
 
-    expect(agents).toContain("## career capture");
-    expect(agents).toContain("after a successful commit");
-    expect(agents).toContain("before beginning a new implementation task");
+    expect(agents).toContain("## career capture 专属规则");
+    expect(agents).toContain("成功 commit 后");
+    expect(agents).toContain("开始新的实现任务前");
   });
 
-  it("starts with an empty stable career index", async () => {
+  it("keeps a stable career index schema", async () => {
     const index = JSON.parse(
       await fs.readFile("career-prepare/novel-agent/index.json", "utf8"),
-    );
+    ) as { schemaVersion: number; project: string; cases: unknown; decisions: unknown };
 
-    expect(index).toEqual({
+    expect(index).toMatchObject({
       schemaVersion: 1,
       project: "novel-agent",
-      cases: [],
-      decisions: [],
     });
+    expect(Array.isArray(index.cases)).toBe(true);
+    expect(Array.isArray(index.decisions)).toBe(true);
   });
 });
