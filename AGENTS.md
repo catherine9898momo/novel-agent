@@ -1,60 +1,100 @@
-# Novel Agent Workspace Rules
+# Novel Agent 工作区规则
 
-## Skill Governance
+## 项目主工作流
 
-This project treats skills as opt-in workflow modules, not as authority over the
-Novel Agent architecture. Use the project workflow first:
+所有实现优先服务于 Novel Agent 的核心创作链路：
 
 ```text
-User goal -> story state -> planning -> drafting -> review -> rewrite -> memory/state update
+用户目标 -> 故事状态 -> 规划 -> 起草 -> 审阅 -> 重写 -> 记忆/状态更新
 ```
 
-Skills must not bypass or replace that pipeline.
+辅助工具、Skill、文档和自动化不得绕过、替代或长期挤占这条主链路。
 
-### Default Skill Limits
+## Skill 治理
 
-- Simple answer or small code edit: use no skill unless explicitly named.
-- Project analysis, architecture planning, or documentation: use at most 1 skill.
-- Complex implementation or UI verification: use at most 2 skills.
-- More than 2 skills requires a short user-facing reason before loading them.
-- External-action skills require explicit user intent or clear task necessity.
+本项目把 Skill 视为可选工作流模块，不视为 Novel Agent 架构的决定者。
 
-### Priority Order
+### Skill 使用原则
 
-1. User instructions in the current conversation.
-2. This repository's `AGENTS.md`.
-3. Project docs under `docs/`.
-4. Loaded skill instructions.
-5. General model defaults.
+- 只要 Skill 与当前任务直接相关、能推进当前里程碑，就可以使用，不设置固定数量上限。
+- 调用 Skill 前，向用户简要说明 Skill 名称及其提供的具体价值。
+- 不调用功能重复、只增加流程但不提高结果质量的 Skill。
+- 如果一个或多个 Skill 会扩大任务范围、改变优先级，或把小任务扩展成新项目，立即触发“主线优先级保护”：说明当前目标、范围变化、成本和被推迟的能力，并获得用户明确确认后再继续。
+- 如果 Skill 会操作外部系统、部署、发送消息或产生其他副作用，必须先获得用户确认。
+- 用户明确指定的 Skill 优先使用；如存在冲突、明显不适用或会损害主线目标，应说明原因。
+- Skill 只能服务当前主目标，不得自行把辅助工作升级为新项目。
 
-If a skill conflicts with the Novel Agent workflow or these rules, follow this
-file and note the conflict briefly.
+### 指令优先级
 
-### Allowed By Default
+1. 当前对话中的用户指令。
+2. 本仓库的 `AGENTS.md`。
+3. `docs/` 下的项目文档。
+4. 已加载的 Skill 指令。
+5. 通用默认规则。
 
-Use these when directly relevant:
+如果 Skill 与 Novel Agent 主工作流或本文件冲突，以本文件为准，并向用户简要说明冲突。
 
-- `create-plan` for explicit planning requests.
-- `diagram` for capability maps, architecture diagrams, or ToDiagram payloads.
-- `grill-me` for requested architecture/product stress tests.
-- `react-doctor`, `webapp-testing`, `playwright` for frontend validation.
-- `gh-fix-ci` only for GitHub Actions CI failures.
-- `mcp-builder` only when building or reviewing an MCP server.
-- `stop-slop-zh`, `content-research-writer` only for requested prose editing or content synthesis.
+### 默认允许的 Skill
 
-### Explicit-Only Skills
+仅在直接相关时使用：
 
-Do not auto-trigger these unless the user names them or the task clearly requires
-their side effects or external systems:
+- 明确要求制定计划时使用 `create-plan`。
+- 能力地图、架构图或 ToDiagram 输出使用 `diagram`。
+- 架构或产品反方评审使用 `grill-me`。
+- 前端验证使用 `react-doctor`、`webapp-testing`、`playwright`。
+- GitHub Actions CI 失败使用 `gh-fix-ci`。
+- 构建或审查 MCP Server 使用 `mcp-builder`。
+- 用户明确要求中文润色或内容综合时使用 `stop-slop-zh`、`content-research-writer`。
 
-- Deployment: `vercel-deploy`, `netlify-deploy`, `render-deploy`, `cloudflare-deploy`, `deploy-pipeline`.
-- External apps/actions: `connect`, `connect-apps`, Gmail, Notion, Linear.
-- Production observability: `sentry`, `sentry-triage`, `datadog-logs`.
-- Broad web/social research: `agent-reach`, `firecrawl-lean`.
-- Personal productivity or unrelated business workflows: meeting, lead, support, resume, developer-growth skills.
+### 需要用户确认的 Skill
 
-### Traceability
+以下 Skill 如与当前任务直接相关，可以在说明价值、范围和副作用并获得用户确认后使用：
 
-When a skill is used, state the skill name and why it is relevant in one short
-sentence. For multi-step work, keep the Novel Agent workflow visible in the
-final summary.
+- 部署：`vercel-deploy`、`netlify-deploy`、`render-deploy`、`cloudflare-deploy`、`deploy-pipeline`。
+- 外部应用操作：`connect`、`connect-apps`、Gmail、Notion、Linear。
+- 生产可观测性：`sentry`、`sentry-triage`、`datadog-logs`。
+- 广泛网络或社交平台调研：`agent-reach`、`firecrawl-lean`。
+- 与本项目无关的个人效率、会议、销售线索、客服、简历或成长分析 Skill。
+
+### Skill 可追踪性
+
+- 使用 Skill 时，用一句话说明 Skill 名称及其与当前任务的关系。
+- 多步骤工作必须在阶段总结中持续展示 Novel Agent 主线进度。
+
+## 主线优先级保护
+
+- 多步骤工作必须明确维护“主目标”和“当前里程碑”。不能直接映射到当前里程碑的任务，默认属于辅助任务或元任务，应进入 backlog。
+- 调整任务优先级前，必须向用户说明：当前目标、新任务、会推迟的用户可感知能力、预计范围或成本，以及 Agent 的建议。只有用户明确确认优先级变化后才能切换。
+- 用户说“继续”“确认”“按照你的推荐执行”，默认只批准已经说明的当前动作，不代表允许暂停或替换主线目标。
+- 开始实现前，必须说明任务带来的用户可感知变化、涉及的核心模块和验收方式。无法说明时，不得加入当前执行计划。
+- 未经单独确认，辅助任务和元任务最多占当前里程碑工作量的 15%，或最多一个 commit，先达到者为准。
+- 如果连续两个任务或 commit 没有推进 Novel Agent 核心工作流，必须在第三个任务开始前停止并向用户报告偏航。
+- 禁止元工作递归：为了记录、规划或评估辅助机制而产生的工作，不得继续生成更多同类工作，除非用户明确要求暂停主线。
+- Skill 可以帮助执行当前目标，但不得把小任务扩展成新项目。Skill 流程与任务规模不相称时，应先缩小流程；如果仍需要扩大范围，必须触发优先级确认。
+- 每次里程碑汇报必须包含：主线进度、用户可感知变化、辅助工作占比，以及是否发生经过确认的优先级变化。
+- 数据丢失风险、安全漏洞或构建完全阻塞可以临时打断主线，但必须立即说明原因、影响和恢复主线的条件。
+
+## 日常执行检查
+
+开始多步骤任务前，先向用户展示：
+
+```text
+主目标：
+当前里程碑：
+本任务的主线贡献：
+用户可感知变化：
+验收方式：
+是否改变优先级：否 / 是（附用户确认依据）
+```
+
+阶段结束时再次报告这些信息。不要只报告测试数量、提交数量或辅助设施完成度。
+
+## Git 分支与推送规则
+
+- 远端 `main` 只能由当前检出的本地 `main` 分支推送。禁止从功能分支使用 refspec、`HEAD:main` 或其他方式直接更新 `origin/main`。
+- 准备进入远端 `main` 的变更必须先 merge 或 cherry-pick 到本地 `main`，并在本地完成验证。
+- 推送 `main` 前必须向用户展示：commit 列表、文件变化、系统收益、影响模块、风险、测试结果、远端目标和回滚方式。只有获得明确确认后才能推送。
+- `main` 默认只允许 fast-forward 推送，不得 force push。确需改写远端历史时，必须单独说明风险并获得明确授权。
+- Career、实验和辅助功能分支只能推送到各自同名远端分支，不能整体合入 `main`。其中确有 Novel Agent 系统增益的内容，应拆成独立 commit，经审查后再进入本地 `main`。
+- 任何远端推送都属于外部副作用，应独立确认；不同目标分支分别确认。
+- 推送后必须验证本地分支与对应远端分支指向同一 commit，并报告结果。
