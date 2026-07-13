@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   console.log("Fanfic UI preview: " + url);
   console.log("Serving: docs/" + entry);
   console.log("Fanfic root: " + fanficRoot);
-  console.log("API: /api/fanfic/session, /api/fanfic/action, and /api/fanfic/story-card");
+  console.log("API: /api/fanfic/session, /api/fanfic/continue, /api/fanfic/action, and /api/fanfic/story-card");
   console.log("Press Ctrl+C to stop.");
 }
 

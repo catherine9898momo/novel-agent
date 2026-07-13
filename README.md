@@ -1,6 +1,21 @@
 # Novel-Agent 📖
 
-AI 驱动的长篇小说创作助手，支持多模型路由、流式输出、人机协作。
+面向长篇原创与同人短篇的人机协作创作工程，支持多模型路由、流式输出和可恢复状态。
+
+项目仓库：[github.com/catherine9898momo/novel-agent](https://github.com/catherine9898momo/novel-agent)
+
+## 当前能力
+
+| 创作模式 | 当前状态 | 已有能力 |
+|---|---|---|
+| 同人短篇 | 可运行闭环 | 创意解析、Canon 约束、计划、草稿、审阅、改写、人工接受、状态机、CLI、本地 UI/API、事件指标 |
+| 长篇原创 | 工程化工具链 | 项目初始化、大纲与人物设定、章节管理、上下文压缩、分析、审阅、连贯性审计、多模型路由 |
+
+同人短篇已经具备可恢复的端到端流程：
+
+`用户创意 → 故事卡与 Canon → 人工确认 → 计划 → 人工确认 → 草稿 → 审阅 → 改写 → 人工接受 → 终稿`
+
+长篇链路仍沿用现有入口，尚未与短篇共享统一的项目模型和 `continue` 编排器。
 
 ## 快速开始
 
@@ -29,10 +44,33 @@ PLAN_BASE_URL=https://open.bigmodel.cn/api/anthropic
 PLAN_MODEL=glm-5.1
 ```
 
-### 3. 创建小说
+### 3. 运行同人短篇工作台
 
 ```bash
-npm start 我的小说名
+npm run preview:fanfic-ui
+```
+
+打开终端输出的本地地址，即可从创意输入开始，逐步确认故事卡、计划、草稿和终稿。工作台默认写入 `fanfics-ui-local/`，可通过 `FANFIC_ROOT` 覆盖。
+
+也可以使用 CLI：
+
+```bash
+npm run fanfic -- init rain-letter
+npm run fanfic -- continue rain-letter --idea "一个短篇同人创意"
+npm run fanfic -- status rain-letter
+```
+
+`continue` 只自动执行安全步骤，并在需要人工审批时停止。确认动作通过显式命令执行：
+
+```bash
+npm run fanfic -- run rain-letter approve_idea
+npm run fanfic -- continue rain-letter
+```
+
+### 4. 创建长篇小说
+
+```bash
+npm start -- 我的小说名
 ```
 
 首次运行会：
@@ -40,10 +78,10 @@ npm start 我的小说名
 2. 引导你填写故事前提（premise）
 3. 自动生成大纲、人物、关系、章节列表
 
-### 4. 继续创作
+### 5. 继续长篇创作
 
 ```bash
-npm start 我的小说名
+npm start -- 我的小说名
 ```
 
 系统会自动检测进度，从上次中断的地方继续。
@@ -51,10 +89,16 @@ npm start 我的小说名
 ## 常用命令
 
 | 命令 | 说明 |
-|------|------|
-| `npm start <小说名>` | 开始/继续创作 |
-| `npm run analyze <小说名>` | 分析已有章节 |
-| `npm run verify` | 验证模式（无需 API Key） |
+|---|---|
+| `npm start -- <小说名>` | 开始/继续长篇创作 |
+| `npm run fanfic -- init <story_id>` | 初始化同人短篇项目 |
+| `npm run fanfic -- continue <story_id>` | 自动推进到下一人工确认门 |
+| `npm run fanfic -- status <story_id>` | 查看状态、下一动作和产物 |
+| `npm run fanfic -- run <story_id> <command>` | 显式执行一条状态机命令 |
+| `npm run preview:fanfic-ui` | 启动本地短篇工作台和 API |
+| `npm run analyze -- <小说名>` | 分析已有长篇章节 |
+| `npm run metrics:events -- <events.jsonl>` | 汇总工作流事件指标 |
+| `npm run check` | 运行类型检查和完整测试 |
 | `npm test` | 运行单元测试 |
 | `npx vitest run tests/models-live.test.ts` | 测试 API 连通性 |
 
@@ -87,6 +131,8 @@ novels/
 | `compress` | 上下文压缩 | MiniMax |
 | `opus` | 关键章升级 | Claude Opus |
 
+同人短篇可以使用 `FANFIC_PLAN_`、`FANFIC_WRITE_`、`FANFIC_REVIEW_` 和 `FANFIC_REWRITE_` 前缀覆盖对应模型；未配置时分别回退到通用的规划、写作和审阅端点。
+
 配置方式：在 `.env` 中设置 `{ROLE}_MODEL`、`{ROLE}_API_KEY`、`{ROLE}_BASE_URL`。
 
 ## 人机协作 (HITL)
@@ -102,15 +148,42 @@ novels/
 - 输入 `n` 拒绝并说明原因
 - 输入数字选择选项
 
-## 验证模式
+同人短篇的人工确认门由状态机强制执行；自动 `continue` 不会替用户审批故事卡、计划、草稿或终稿。
 
-无需 API Key 即可测试完整流程：
+## 同人短篇产物
 
-```bash
-npm run verify
+```text
+fanfics/rain-letter/
+├── _state.json
+├── _idea.json
+├── _canon.json
+├── _plan.json
+├── _context/
+├── _drafts/
+├── _reviews/
+└── final.md
 ```
 
-会使用 Mock 数据模拟所有 API 调用，生成验证报告。
+状态转移、文件路径和人工确认门由工程代码控制；模型只负责解析或生成内容。
+
+## 事件与指标
+
+为同人短篇 CLI 指定事件日志后，`continue` 会写入 JSONL 事件：
+
+```bash
+FANFIC_METRICS_LOG=./fanfic-events.jsonl npm run fanfic -- continue rain-letter
+npm run metrics:events -- ./fanfic-events.jsonl
+```
+
+## 当前限制
+
+- 同人短篇状态机目前偏单向，尚不支持自然的多轮退回、重新打开和版本分支。
+- 计划、草稿和终稿还没有统一的版本化编辑合同。
+- 长篇与短篇尚未共享统一项目外壳和编排入口。
+- 当前 UI/API 面向本地运行，不是已部署的在线服务。
+- 素材召回、显式偏好和多轮 revision loop 属于下一阶段 P0 范围。
+
+后续设计与边界见 [P0 统一创作工作台技术设计](./docs/P0_UNIFIED_CREATION_TECHNICAL_DESIGN.md)。
 
 ## 流式输出
 
@@ -129,13 +202,13 @@ npm run verify
 
 ```bash
 # 类型检查
-npx tsc --noEmit
+npm run typecheck
 
 # 运行测试
 npm test
 
-# 监听模式
-npm run test:watch
+# 完整检查
+npm run check
 ```
 
 ## 文档
@@ -143,6 +216,9 @@ npm run test:watch
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — 架构设计
 - [CONCEPTS.md](./CONCEPTS.md) — 核心概念
 - [.env.example](./.env.example) — 配置示例
+- [同人短篇 MVP 需求](./docs/FANFIC_SHORT_STORY_MVP_REQUIREMENTS.md) — 短篇范围与实现阶段
+- [同人短篇 UI 交互流程](./docs/FANFIC_UI_INTERACTION_FLOW.md) — 状态机、产物和本地 API
+- [P0 统一创作工作台技术设计](./docs/P0_UNIFIED_CREATION_TECHNICAL_DESIGN.md) — 下一阶段统一方案
 
 ## 常见问题
 

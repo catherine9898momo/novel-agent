@@ -288,9 +288,9 @@ Gate behavior:
 - `accept_final` is available only after review and creates the copyable final output.
 - Earlier-step actions remain locked after their gate has passed.
 
-前端现在可以开始和 CLI/local adapter 做半真实联调；后续再把同一组 command 包成 HTTP/API。
+CLI、local adapter 和 HTTP API 现在共用同一组状态机命令；自动推进由 `continueFanficProject` 执行，并在人工确认门前停止。
 
-Frontend integration can now start against a CLI/local adapter. Later, the same commands can be wrapped as HTTP/API endpoints.
+The CLI, local adapter, and HTTP API now share the same state-machine commands. `continueFanficProject` performs safe automatic steps and stops before human approval gates.
 
 ## 12. Local UI 联调状态 / Local UI Integration Status
 
@@ -301,6 +301,7 @@ Frontend integration can now start against a CLI/local adapter. Later, the same 
 The static HTML now connects to a local fanfic workflow adapter. `npm run preview:fanfic-ui` serves both the page and API:
 
 - `POST /api/fanfic/session`: 初始化或读取 UI session。
+- `POST /api/fanfic/continue`: 自动执行安全步骤，并返回本轮命令、停止原因、下一动作和最新 snapshot。
 - `POST /api/fanfic/action`: 执行 `parse_idea`、`approve_idea`、`generate_plan`、`approve_plan`、`generate_draft`、`approve_draft`、`run_review`、`generate_rewrite`、`accept_final`。
 - `POST /api/fanfic/story-card`: 在故事卡确认前执行单点修订，写回 `_idea.json` 或 `_canon.json`，不重新调用 LLM。
 - API 复用 `runFanficCommand`，状态转移和 artifact 落盘仍由工程代码控制，LLM 只负责内容生成。
@@ -310,8 +311,8 @@ The static HTML now connects to a local fanfic workflow adapter. `npm run previe
 验收 / Verification:
 
 - `tests/fanfic-local-adapter.test.ts` 覆盖 adapter snapshot 与完整 action 链路。
-- `tests/fanfic-local-http-server.test.ts` 覆盖页面服务、API action 和故事卡单点 patch。
-- `tests/fanfic-ui-html.test.ts` 覆盖退回修改、loading 反馈和故事卡单点弹窗修改。
+- `tests/fanfic-local-http-server.test.ts` 覆盖页面服务、API continue/action 和故事卡单点 patch。
+- `tests/fanfic-ui-html.test.ts` 覆盖继续创作摘要、人工确认边界、退回修改、loading 反馈和故事卡单点弹窗修改。
 - HTTP smoke 已验证 `session -> parse_idea` 可通过真实模型链路生成 `_idea.json` 与 `_canon.json`。
 
 ## 13. Phase 1 测试依据 / Phase 1 Test Reference

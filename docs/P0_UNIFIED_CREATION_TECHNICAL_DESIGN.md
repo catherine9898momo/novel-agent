@@ -28,7 +28,7 @@ P0 的目标不是同时完成长篇和短篇生成，而是：
 当前不能破坏的合同：
 
 - 现有 `fanfics/{storyId}` 项目必须能继续读取；
-- 现有 `/api/fanfic/session`、`/api/fanfic/action`、`/api/fanfic/story-card` 在迁移期继续工作；
+- 现有 `/api/fanfic/session`、`/api/fanfic/continue`、`/api/fanfic/action`、`/api/fanfic/story-card` 在迁移期继续工作；
 - 现有固定 artifact 路径继续作为“当前版本投影”；
 - LLM 不能决定文件路径、状态转移和版本号；
 - 现有无网络测试必须继续通过。

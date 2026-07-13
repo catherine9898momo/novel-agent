@@ -1,7 +1,7 @@
 {
   "name": "novel-agent",
   "version": "1.0.0",
-  "description": "",
+  "description": "Human-in-the-loop workflows for long-form fiction and short fanfiction creation",
   "main": "index.js",
   "scripts": {
     "metrics": "tsx src/main.ts metrics",
@@ -22,9 +22,23 @@
     "check": "npm run typecheck && npm test",
     "metrics:events": "tsx src/observability-cli.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "ai-writing",
+    "novel",
+    "fanfiction",
+    "human-in-the-loop",
+    "typescript"
+  ],
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catherine9898momo/novel-agent.git"
+  },
+  "homepage": "https://github.com/catherine9898momo/novel-agent#readme",
+  "bugs": {
+    "url": "https://github.com/catherine9898momo/novel-agent/issues"
+  },
   "type": "commonjs",
   "devDependencies": {
     "@types/node": "^25.5.0",
