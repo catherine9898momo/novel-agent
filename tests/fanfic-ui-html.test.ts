@@ -50,4 +50,39 @@ describe("fanfic UI HTML interactions", () => {
     expect(html).toContain("grid-template-columns: minmax(220px, 320px) minmax(0, 1fr)");
     expect(html).toContain("final-document");
   });
+
+  it("提供继续创作入口并调用 continue API", () => {
+    expect(html).toContain('id="continueBtn"');
+    expect(script).toContain('continue: "/api/fanfic/continue"');
+    expect(script).toContain("async function continueCreation");
+    expect(script).toContain("maxSteps: 8");
+  });
+
+  it("展示运行中、本轮步骤、停止原因和下一动作", () => {
+    expect(html).toContain('id="runSummary"');
+    expect(html).toContain('id="executedCommands"');
+    expect(html).toContain('id="nextActionText"');
+    expect(script).toContain("renderContinueResult");
+    expect(script).toContain("等待人工确认");
+    expect(script).toContain("没有可执行动作");
+    expect(script).toContain("达到最大执行步数");
+    expect(script).toContain("命令执行失败");
+  });
+
+  it("继续创作不会从前端自动发送审批命令", () => {
+    const continueBody = script.match(/async function continueCreation\(\) \{([\s\S]*?)\n    \}/)?.[1] ?? "";
+    expect(continueBody).toContain("API.continue");
+    expect(continueBody).not.toContain("approve_");
+    expect(continueBody).not.toContain("runAction");
+  });
+
+  it("刷新恢复项目状态时重置仅属于上一轮的运行摘要", () => {
+    const startSessionBody = script.match(/async function startSession\([\s\S]*?\) \{([\s\S]*?)\n    \}/)?.[1] ?? "";
+    expect(startSessionBody).toContain("continueResult = null");
+    expect(startSessionBody).toContain("applySnapshot(snapshot)");
+  });
+
+  it("页面脚本保持可编译", () => {
+    expect(() => new Function(script.replace("<script>", ""))).not.toThrow();
+  });
 });

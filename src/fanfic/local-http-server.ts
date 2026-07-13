@@ -1,7 +1,8 @@
 import fs from "fs/promises";
 import http from "http";
 import path from "path";
-import { initFanficUiSession, patchFanficUiStoryCard, runFanficUiAction } from "./local-adapter.js";
+import { createFanficUiSnapshot, initFanficUiSession, patchFanficUiStoryCard, runFanficUiAction } from "./local-adapter.js";
+import { continueFanficProject } from "./orchestrator.js";
 import type { FanficCommandOptions } from "./commands.js";
 import type { FanficCommand, FanficProjectOptions } from "./types.js";
 
@@ -65,6 +66,29 @@ async function handleApi(
       sendJson(res, 200, { ok: true, snapshot });
       return;
     }
+  }
+
+  if (url.pathname === "/api/fanfic/continue" && req.method === "POST") {
+    const body = await readJsonBody(req);
+    const storyId = readStoryId(body);
+    const maxSteps = readMaxSteps(body);
+    const ideaText = typeof body.ideaText === "string" ? body.ideaText : undefined;
+    const result = await continueFanficProject(storyId, {
+      ...options.commandOptions,
+      rootDir: options.rootDir,
+      ideaText,
+      maxSteps,
+    });
+    const snapshot = await createFanficUiSnapshot(storyId, { rootDir: options.rootDir });
+    sendJson(res, 200, {
+      ok: true,
+      executedCommands: result.executedCommands,
+      nextAction: result.nextAction,
+      stoppedReason: result.stoppedReason,
+      state: result.state,
+      snapshot,
+    });
+    return;
   }
 
   if (url.pathname === "/api/fanfic/action" && req.method === "POST") {
@@ -151,6 +175,14 @@ function readStoryId(body: Record<string, unknown>): string {
     return "ui-workspace";
   }
   return body.storyId.trim();
+}
+
+function readMaxSteps(body: Record<string, unknown>): number {
+  const value = body.maxSteps ?? 1;
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    throw new Error("maxSteps must be a positive integer");
+  }
+  return value;
 }
 
 function readCommand(body: Record<string, unknown>): FanficCommand {

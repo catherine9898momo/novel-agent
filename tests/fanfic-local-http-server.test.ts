@@ -101,6 +101,62 @@ describe("fanfic local preview HTTP server", () => {
       await close(server);
     }
   });
+
+  it("continues safe commands and stops before human approval", async () => {
+    const server = createFanficPreviewServer({
+      docsDir: DOCS_DIR,
+      entry: "fanfic-idea-workspace.html",
+      rootDir: ROOT,
+      commandOptions: { ideaParser: async () => parsedIdea },
+    });
+    const baseUrl = await listen(server);
+    try {
+      await request(baseUrl, "POST", "/api/fanfic/session", { storyId: "http-continue" });
+      const continued = await request(baseUrl, "POST", "/api/fanfic/continue", { storyId: "http-continue", ideaText: "原始创意", maxSteps: 2 });
+      expect(continued.status).toBe(200);
+      expect(continued.json.executedCommands).toEqual(["parse_idea"]);
+      expect(continued.json.nextAction).toBe("approve_idea");
+      expect(continued.json.stoppedReason).toBe("awaiting_human");
+      expect(continued.json.state.status).toBe("idea_pending_confirm");
+      expect(continued.json.snapshot.artifacts.idea.content.source).toBe("示例恋歌");
+    } finally { await close(server); }
+  });
+
+  it("returns max_steps with the persisted next action", async () => {
+    const server = createFanficPreviewServer({ docsDir: DOCS_DIR, entry: "fanfic-idea-workspace.html", rootDir: ROOT, commandOptions: { ideaParser: async () => parsedIdea } });
+    const baseUrl = await listen(server);
+    try {
+      await request(baseUrl, "POST", "/api/fanfic/session", { storyId: "http-max-steps" });
+      const continued = await request(baseUrl, "POST", "/api/fanfic/continue", { storyId: "http-max-steps", ideaText: "原始创意", maxSteps: 1 });
+      expect(continued.status).toBe(200);
+      expect(continued.json.executedCommands).toEqual(["parse_idea"]);
+      expect(continued.json.nextAction).toBe("approve_idea");
+      expect(continued.json.stoppedReason).toBe("max_steps");
+      expect(continued.json.snapshot.state.revision).toBe(1);
+    } finally { await close(server); }
+  });
+
+  it("does not turn orchestrator failures into successful responses", async () => {
+    const server = createFanficPreviewServer({ docsDir: DOCS_DIR, entry: "fanfic-idea-workspace.html", rootDir: ROOT, commandOptions: { ideaParser: async () => { throw new Error("parser unavailable"); } } });
+    const baseUrl = await listen(server);
+    try {
+      await request(baseUrl, "POST", "/api/fanfic/session", { storyId: "http-failure" });
+      const continued = await request(baseUrl, "POST", "/api/fanfic/continue", { storyId: "http-failure", ideaText: "原始创意", maxSteps: 2 });
+      expect(continued.status).toBe(500);
+      expect(continued.json).toMatchObject({ ok: false, error: "parser unavailable" });
+      expect(continued.json.executedCommands).toBeUndefined();
+    } finally { await close(server); }
+  });
+
+  it("returns a displayable validation error for invalid continue input", async () => {
+    const server = createFanficPreviewServer({ docsDir: DOCS_DIR, entry: "fanfic-idea-workspace.html", rootDir: ROOT });
+    const baseUrl = await listen(server);
+    try {
+      const continued = await request(baseUrl, "POST", "/api/fanfic/continue", { storyId: "http-invalid", maxSteps: 0 });
+      expect(continued.status).toBe(400);
+      expect(continued.json).toMatchObject({ ok: false, error: "maxSteps must be a positive integer" });
+    } finally { await close(server); }
+  });
 });
 
 function listen(server: http.Server): Promise<string> {

@@ -565,6 +565,22 @@
       font: 13px/1.5 system-ui, sans-serif;
     }
 
+    .run-summary {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(39, 35, 31, 0.12);
+      background: rgba(255, 252, 245, 0.58);
+      font: 13px/1.5 system-ui, sans-serif;
+    }
+
+    .run-summary p { margin: 0; }
+    .run-summary ul { margin: 0; padding-left: 20px; color: var(--muted); }
+    .run-summary .run-status { color: var(--moss); font-weight: 800; }
+    .run-summary.failed .run-status { color: var(--bad); }
+
     .tabs-panel {
       grid-column: 1 / -1;
     }
@@ -937,9 +953,16 @@
             <h3 id="gateTitle">等待解析创意</h3>
             <p id="gateText">先点击“解析创意”，生成可编辑故事卡和原作约束。</p>
             <div class="action-row">
-              <button class="primary" id="nextActionBtn" disabled>执行下一步</button>
+              <button class="primary" id="continueBtn">继续创作</button>
+              <button class="quiet" id="nextActionBtn" disabled>执行下一步</button>
               <button class="quiet" id="inspectBtn">查看产物</button>
             </div>
+            <section class="run-summary" id="runSummary" aria-live="polite">
+              <p class="run-status" id="runStatus">可以继续</p>
+              <p>本轮执行步骤</p>
+              <ul id="executedCommands"><li>尚未执行</li></ul>
+              <p id="nextActionText">下一动作：等待项目状态加载</p>
+            </section>
           </section>
         </div>
       </aside>
@@ -1033,6 +1056,7 @@
     const API = {
       session: "/api/fanfic/session",
       action: "/api/fanfic/action",
+      continue: "/api/fanfic/continue",
       storyCard: "/api/fanfic/story-card"
     };
 
@@ -1041,6 +1065,7 @@
     let busy = false;
     let busyCommand = "";
     let lastError = "";
+    let continueResult = null;
     let activeStoryCardEdit = null;
     let activeStage = "";
 
@@ -1073,6 +1098,18 @@
       artifacts: "artifacts"
     };
 
+    const commandLabels = {
+      parse_idea: "解析创意",
+      approve_idea: "确认故事卡",
+      generate_plan: "生成短篇计划",
+      approve_plan: "确认计划",
+      generate_draft: "生成草稿",
+      approve_draft: "确认草稿",
+      run_review: "执行审阅",
+      generate_rewrite: "生成改写稿",
+      accept_final: "接受终稿"
+    };
+
     const artifactLabels = {
       drafted: "草稿",
       confirmed: "已确认",
@@ -1090,6 +1127,7 @@
     };
 
     const buttonIdleLabels = {
+      continueBtn: "继续创作",
       nextActionBtn: "执行下一步",
       parseBtn: "解析创意",
       resetBtn: "恢复样例",
@@ -1114,6 +1152,7 @@
       run_review: "runReviewBtn",
       generate_rewrite: "rewriteBtn",
       accept_final: "acceptBtn",
+      continue: "continueBtn",
       session: "resetBtn"
     };
 
@@ -1127,6 +1166,7 @@
       run_review: "审阅中...",
       generate_rewrite: "改写中...",
       accept_final: "接受中...",
+      continue: "继续中...",
       session: "连接中..."
     };
 
@@ -1161,6 +1201,7 @@
       try {
         snapshot = await requestJson(API.session, { storyId });
         lastError = "";
+        continueResult = null;
         activeStage = "";
         applySnapshot(snapshot);
       } catch (error) {
@@ -1177,6 +1218,7 @@
       try {
         snapshot = await requestJson(API.action, { storyId, command, ...extra });
         lastError = "";
+        continueResult = null;
         activeStage = "";
         applySnapshot(snapshot);
         return true;
@@ -1186,6 +1228,35 @@
         return false;
       } finally {
         setBusy(false);
+      }
+    }
+
+    async function continueCreation() {
+      if (busy) return false;
+      continueResult = { status: "running", executedCommands: [], nextAction: snapshot?.nextAction ?? null };
+      setBusy(true, "正在自动推进安全步骤...", "continue");
+      renderContinueResult();
+      try {
+        const response = await fetch(API.continue, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ storyId, ideaText: $("ideaText").value, maxSteps: 8 })
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload?.ok) throw new Error(payload?.error || ("请求失败：" + response.status));
+        continueResult = { status: "stopped", executedCommands: payload.executedCommands ?? [], nextAction: payload.nextAction ?? null, stoppedReason: payload.stoppedReason };
+        lastError = "";
+        activeStage = "";
+        applySnapshot(payload.snapshot);
+        return true;
+      } catch (error) {
+        lastError = error.message;
+        continueResult = { status: "failed", executedCommands: [], nextAction: snapshot?.nextAction ?? null, error: error.message };
+        renderWorkflow();
+        return false;
+      } finally {
+        setBusy(false);
+        renderContinueResult();
       }
     }
 
@@ -1487,6 +1558,27 @@
         : `<p class="empty">还没有生成产物。</p>`;
     }
 
+    function renderContinueResult() {
+      const result = continueResult;
+      const summary = $("runSummary");
+      const status = $("runStatus");
+      summary.classList.toggle("failed", result?.status === "failed");
+      const stopLabels = { awaiting_human: "等待人工确认", no_action: "没有可执行动作", max_steps: "达到最大执行步数" };
+      if (result?.status === "running") status.textContent = "运行中";
+      else if (result?.status === "failed") status.textContent = "命令执行失败";
+      else if (result?.stoppedReason) status.textContent = stopLabels[result.stoppedReason] ?? result.stoppedReason;
+      else status.textContent = snapshot?.nextAction ? "可以继续" : "没有可执行动作";
+
+      const commands = result?.executedCommands ?? [];
+      $("executedCommands").innerHTML = commands.length
+        ? commands.map((command) => "<li>" + escapeHtml(commandLabels[command] ?? command) + "</li>").join("")
+        : "<li>" + (result?.status === "running" ? "正在确定并执行下一步骤" : "本轮尚未执行自动步骤") + "</li>";
+      const nextAction = result?.nextAction ?? snapshot?.nextAction ?? null;
+      $("nextActionText").textContent = result?.status === "failed"
+        ? "错误：" + result.error
+        : "下一动作：" + (nextAction ? (commandLabels[nextAction] ?? nextAction) : "无");
+    }
+
     function renderWorkflow() {
       if (activeStage && activeStage !== "artifacts" && !isStageAccessible(activeStage)) activeStage = "";
       const state = currentState();
@@ -1510,6 +1602,7 @@
         `;
       }).join("");
       renderStageWorkspace();
+      renderContinueResult();
       updateActionAvailability();
       updateGate();
     }
@@ -1555,6 +1648,8 @@
       const disabled = busy;
       const readOnly = Boolean(isViewingReadOnly() || activeStage === "artifacts");
       const canReviseViewedStory = activeStage === "story" && isStageDone("story") && Boolean(artifact("idea"));
+      const humanGate = (state.status === "idea_pending_confirm" && Boolean(artifact("idea"))) || ["plan_pending_confirm", "draft_pending_confirm", "rewrite_pending_confirm"].includes(state.status);
+      $("continueBtn").disabled = disabled || readOnly || humanGate || state.status === "accepted" || state.status === "blocked";
       $("parseBtn").disabled = disabled || readOnly || !(state.status === "idea_pending_confirm" && !artifact("idea"));
       $("resetBtn").disabled = disabled || readOnly;
       $("approveIdeaBtn").disabled = disabled || readOnly || !(state.status === "idea_pending_confirm" && artifact("idea"));
@@ -1789,6 +1884,7 @@
     $("rewriteBtn").addEventListener("click", rewriteDraft);
     $("acceptBtn").addEventListener("click", acceptFinal);
     $("copyFinalBtn").addEventListener("click", copyFinal);
+    $("continueBtn").addEventListener("click", continueCreation);
     $("nextActionBtn").addEventListener("click", runNextAction);
     $("inspectBtn").addEventListener("click", () => { activeStage = "artifacts"; renderWorkflow(); });
     $("storyCardEditSaveBtn").addEventListener("click", saveStoryCardEdit);
@@ -1807,6 +1903,7 @@
 
     renderArtifacts();
     renderWorkflow();
+    renderContinueResult();
     startSession();
   </script>
 </body>
